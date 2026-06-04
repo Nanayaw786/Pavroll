@@ -66,7 +66,7 @@ export default function EmployeesPage() {
 
   const openEdit = (emp: Employee) => {
     setEditingId(emp.id)
-    setForm({ ...emp, basicSalary: emp.basicSalary.toString() })
+    setForm({ ...emp, basicSalary: emp.basicSalary.toString(), status: 'active' as const })
     setShowDialog(true)
     setOpenMenu(null)
   }
