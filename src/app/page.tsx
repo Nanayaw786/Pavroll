@@ -223,8 +223,8 @@ export default function LandingPage() {
         </div>
         <p style={{ fontSize: '12px', color: '#475569' }}>© 2026 Pavroll. Built for Ghana. 🇬🇭</p>
         <div style={{ display: 'flex', gap: '20px' }}>
-          {['Privacy', 'Terms', 'Contact'].map(link => (
-            <a key={link} href="#" style={{ fontSize: '12px', color: '#475569', textDecoration: 'none' }}>{link}</a>
+          {[{ label: 'Privacy', href: '/privacy' }, { label: 'Terms', href: '/terms' }, { label: 'Contact', href: '/contact' }].map(link => (
+            <a key={link.label} href={link.href} style={{ fontSize: '12px', color: '#475569', textDecoration: 'none' }}>{link.label}</a>
           ))}
         </div>
       </footer>
