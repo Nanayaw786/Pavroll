@@ -39,8 +39,12 @@ export default function LandingPage() {
           <span style={{ fontSize: '18px', fontWeight: 800, letterSpacing: '-0.02em' }}>Pav<span style={{ color: '#6366F1' }}>roll</span></span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '32px' }}>
-          {['Features', 'Pricing', 'About'].map(item => (
-            <a key={item} href={`#${item.toLowerCase()}`} style={{ fontSize: '14px', color: '#64748B', textDecoration: 'none', transition: 'color 0.2s' }}>{item}</a>
+          {[
+            { label: 'Features', href: '#features' },
+            { label: 'Pricing', href: '#pricing' },
+            { label: 'About', href: '/about' },
+          ].map(item => (
+            <a key={item.label} href={item.href} style={{ fontSize: '14px', color: '#64748B', textDecoration: 'none', transition: 'color 0.2s' }}>{item.label}</a>
           ))}
         </div>
         <div style={{ display: 'flex', gap: '12px' }}>
