@@ -1,47 +1,12 @@
 'use client'
 import DashboardLayout from '@/components/layout/DashboardLayout'
 import { motion } from 'framer-motion'
-import { useState } from 'react'
-import { Plus, CheckCircle, XCircle, Clock, Calendar } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { Plus, CheckCircle, XCircle, Clock, Calendar, Loader2 } from 'lucide-react'
+import { getLeaveRequests, addLeaveRequest, updateLeaveStatus, type LeaveRequest } from '@/lib/leaveDb'
+import { getEmployees, getCompanyId, type Employee } from '@/lib/employees'
 
 type LeaveStatus = 'pending' | 'approved' | 'rejected'
-type LeaveType = 'Annual' | 'Sick' | 'Maternity' | 'Paternity' | 'Emergency'
-
-type LeaveRequest = {
-  id: string
-  employeeName: string
-  department: string
-  type: LeaveType
-  from: string
-  to: string
-  days: number
-  reason: string
-  status: LeaveStatus
-  appliedOn: string
-}
-
-const mockLeaves: LeaveRequest[] = [
-  { id: '1', employeeName: 'Kwame Mensah', department: 'Engineering', type: 'Annual', from: '2026-06-10', to: '2026-06-14', days: 5, reason: 'Family vacation', status: 'pending', appliedOn: '2026-06-01' },
-  { id: '2', employeeName: 'Ama Owusu', department: 'HR', type: 'Sick', from: '2026-06-05', to: '2026-06-06', days: 2, reason: 'Medical appointment', status: 'approved', appliedOn: '2026-06-04' },
-  { id: '3', employeeName: 'Kofi Asante', department: 'Finance', type: 'Emergency', from: '2026-06-08', to: '2026-06-08', days: 1, reason: 'Family emergency', status: 'approved', appliedOn: '2026-06-07' },
-  { id: '4', employeeName: 'Akosua Boateng', department: 'Sales', type: 'Annual', from: '2026-07-01', to: '2026-07-05', days: 5, reason: 'Holiday', status: 'pending', appliedOn: '2026-06-01' },
-]
-
-const leaveBalances = [
-  { name: 'Kwame Mensah', annual: 15, sick: 10, used: 5, remaining: 20 },
-  { name: 'Ama Owusu', annual: 15, sick: 10, used: 7, remaining: 18 },
-  { name: 'Kofi Asante', annual: 15, sick: 10, used: 3, remaining: 22 },
-  { name: 'Akosua Boateng', annual: 15, sick: 10, used: 2, remaining: 23 },
-]
-
-const leaveTypes: LeaveType[] = ['Annual', 'Sick', 'Maternity', 'Paternity', 'Emergency']
-const employees = ['Kwame Mensah', 'Ama Owusu', 'Kofi Asante', 'Akosua Boateng']
-const departments: Record<string, string> = { 'Kwame Mensah': 'Engineering', 'Ama Owusu': 'HR', 'Kofi Asante': 'Finance', 'Akosua Boateng': 'Sales' }
-const avatarColors = ['#6366F1', '#10B981', '#F59E0B', '#EF4444']
-
-function getInitials(name: string) {
-  return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
-}
 
 const statusConfig = {
   pending: { color: '#F59E0B', bg: 'rgba(245,158,11,0.1)', border: 'rgba(245,158,11,0.2)', icon: Clock, label: 'Pending' },
@@ -49,45 +14,81 @@ const statusConfig = {
   rejected: { color: '#EF4444', bg: 'rgba(239,68,68,0.1)', border: 'rgba(239,68,68,0.2)', icon: XCircle, label: 'Rejected' },
 }
 
-const emptyForm = { employeeName: '', type: 'Annual' as LeaveType, from: '', to: '', reason: '' }
+const leaveTypes = ['Annual', 'Sick', 'Maternity', 'Paternity', 'Emergency']
+const avatarColors = ['#6366F1', '#10B981', '#F59E0B', '#EF4444']
+
+function getInitials(name: string) {
+  return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
+}
+
+const emptyForm = { employeeId: '', type: 'Annual', from: '', to: '', reason: '' }
 
 export default function LeavePage() {
-  const [leaves, setLeaves] = useState<LeaveRequest[]>(mockLeaves)
+  const [companyId, setCompanyId] = useState('')
+  const [leaves, setLeaves] = useState<LeaveRequest[]>([])
+  const [employees, setEmployees] = useState<Employee[]>([])
+  const [loading, setLoading] = useState(true)
   const [tab, setTab] = useState<'requests' | 'balances'>('requests')
   const [filter, setFilter] = useState<'all' | LeaveStatus>('all')
   const [showDialog, setShowDialog] = useState(false)
   const [form, setForm] = useState(emptyForm)
+  const [saving, setSaving] = useState(false)
+
+  useEffect(() => { loadData() }, [])
+
+  const loadData = async () => {
+    try {
+      setLoading(true)
+      const cId = await getCompanyId()
+      setCompanyId(cId)
+      const [leaveData, empData] = await Promise.all([
+        getLeaveRequests(cId),
+        getEmployees(cId)
+      ])
+      setLeaves(leaveData)
+      setEmployees(empData.filter(e => e.status === 'active'))
+    } catch (err) {
+      console.error(err)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const filtered = leaves.filter(l => filter === 'all' ? true : l.status === filter)
 
-  const handleAction = (id: string, status: LeaveStatus) => {
+  const handleAction = async (id: string, status: LeaveStatus) => {
+    await updateLeaveStatus(id, status)
     setLeaves(prev => prev.map(l => l.id === id ? { ...l, status } : l))
   }
 
   const calcDays = (from: string, to: string) => {
     if (!from || !to) return 0
-    const d = (new Date(to).getTime() - new Date(from).getTime()) / (1000 * 60 * 60 * 24) + 1
-    return Math.max(0, d)
+    return Math.max(0, Math.floor((new Date(to).getTime() - new Date(from).getTime()) / (1000 * 60 * 60 * 24)) + 1)
   }
 
-  const handleSave = () => {
-    if (!form.employeeName || !form.from || !form.to) return
-    const days = calcDays(form.from, form.to)
-    const newLeave: LeaveRequest = {
-      id: Date.now().toString(),
-      employeeName: form.employeeName,
-      department: departments[form.employeeName] || '',
-      type: form.type,
-      from: form.from,
-      to: form.to,
-      days,
-      reason: form.reason,
-      status: 'pending',
-      appliedOn: new Date().toISOString().split('T')[0],
+  const handleSave = async () => {
+    if (!form.employeeId || !form.from || !form.to) return
+    setSaving(true)
+    try {
+      const days = calcDays(form.from, form.to)
+      const newLeave = await addLeaveRequest({
+        company_id: companyId,
+        employee_id: form.employeeId,
+        type: form.type,
+        from_date: form.from,
+        to_date: form.to,
+        days,
+        reason: form.reason,
+        status: 'pending',
+      })
+      setLeaves(prev => [newLeave, ...prev])
+      setShowDialog(false)
+      setForm(emptyForm)
+    } catch (err) {
+      console.error(err)
+    } finally {
+      setSaving(false)
     }
-    setLeaves(prev => [newLeave, ...prev])
-    setShowDialog(false)
-    setForm(emptyForm)
   }
 
   const stats = {
@@ -118,7 +119,7 @@ export default function LeavePage() {
         </div>
 
         {/* Tabs + actions */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
           <div style={{ display: 'flex', gap: '4px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '10px', padding: '4px' }}>
             {(['requests', 'balances'] as const).map(t => (
               <button key={t} onClick={() => setTab(t)}
@@ -130,7 +131,7 @@ export default function LeavePage() {
             ))}
           </div>
 
-          <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+          <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
             {tab === 'requests' && (
               <div style={{ display: 'flex', gap: '6px' }}>
                 {(['all', 'pending', 'approved', 'rejected'] as const).map(f => (
@@ -151,8 +152,16 @@ export default function LeavePage() {
           </div>
         </div>
 
+        {/* Loading */}
+        {loading && (
+          <div style={{ padding: '48px', textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px' }}>
+            <Loader2 size={20} color="#6366F1" style={{ animation: 'spin 1s linear infinite' }} />
+            <span style={{ color: '#475569', fontSize: '14px' }}>Loading leave requests...</span>
+          </div>
+        )}
+
         {/* Leave Requests table */}
-        {tab === 'requests' && (
+        {!loading && tab === 'requests' && (
           <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '16px', overflow: 'hidden' }}>
             <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr 1fr 1fr', padding: '12px 20px', borderBottom: '1px solid rgba(255,255,255,0.05)', background: 'rgba(255,255,255,0.02)' }}>
               {['Employee', 'Type', 'Duration', 'Days', 'Status', 'Actions'].map(h => (
@@ -160,25 +169,34 @@ export default function LeavePage() {
               ))}
             </div>
 
+            {filtered.length === 0 && (
+              <div style={{ padding: '48px', textAlign: 'center' }}>
+                <Calendar size={36} color="#475569" style={{ margin: '0 auto 12px' }} />
+                <p style={{ color: '#475569', fontSize: '14px' }}>No leave requests yet</p>
+              </div>
+            )}
+
             {filtered.map((leave, i) => {
               const sc = statusConfig[leave.status]
               const StatusIcon = sc.icon
+              const empName = leave.employee?.name || 'Unknown'
+              const empDept = leave.employee?.department || ''
               return (
                 <motion.div key={leave.id} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.04 }}
                   style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr 1fr 1fr', padding: '14px 20px', borderBottom: '1px solid rgba(255,255,255,0.04)', alignItems: 'center' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                     <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: avatarColors[i % avatarColors.length], display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', fontWeight: 700, color: '#fff', flexShrink: 0 }}>
-                      {getInitials(leave.employeeName)}
+                      {getInitials(empName)}
                     </div>
                     <div>
-                      <p style={{ fontSize: '13px', fontWeight: 600, color: '#F8FAFC' }}>{leave.employeeName}</p>
-                      <p style={{ fontSize: '11px', color: '#475569' }}>{leave.department}</p>
+                      <p style={{ fontSize: '13px', fontWeight: 600, color: '#F8FAFC' }}>{empName}</p>
+                      <p style={{ fontSize: '11px', color: '#475569' }}>{empDept}</p>
                     </div>
                   </div>
                   <span style={{ fontSize: '12px', padding: '3px 10px', borderRadius: '6px', background: 'rgba(99,102,241,0.1)', color: '#818CF8', border: '1px solid rgba(99,102,241,0.2)', width: 'fit-content' }}>{leave.type}</span>
                   <div>
-                    <p style={{ fontSize: '12px', color: '#94A3B8' }}>{leave.from}</p>
-                    <p style={{ fontSize: '11px', color: '#475569' }}>to {leave.to}</p>
+                    <p style={{ fontSize: '12px', color: '#94A3B8' }}>{leave.from_date}</p>
+                    <p style={{ fontSize: '11px', color: '#475569' }}>to {leave.to_date}</p>
                   </div>
                   <span style={{ fontSize: '13px', fontWeight: 600, color: '#F8FAFC' }}>{leave.days}d</span>
                   <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', fontSize: '11px', fontWeight: 600, padding: '3px 10px', borderRadius: '999px', width: 'fit-content', background: sc.bg, color: sc.color, border: `1px solid ${sc.border}` }}>
@@ -210,34 +228,39 @@ export default function LeavePage() {
           </div>
         )}
 
-        {/* Leave Balances table */}
-        {tab === 'balances' && (
+        {/* Leave Balances */}
+        {!loading && tab === 'balances' && (
           <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '16px', overflow: 'hidden' }}>
             <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr 1fr', padding: '12px 20px', borderBottom: '1px solid rgba(255,255,255,0.05)', background: 'rgba(255,255,255,0.02)' }}>
-              {['Employee', 'Annual Entitlement', 'Sick Leave', 'Days Used', 'Remaining'].map(h => (
+              {['Employee', 'Annual', 'Sick', 'Days Used', 'Remaining'].map(h => (
                 <span key={h} style={{ fontSize: '11px', fontWeight: 600, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{h}</span>
               ))}
             </div>
-            {leaveBalances.map((emp, i) => (
-              <motion.div key={emp.name} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.04 }}
-                style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr 1fr', padding: '14px 20px', borderBottom: '1px solid rgba(255,255,255,0.04)', alignItems: 'center' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: avatarColors[i % avatarColors.length], display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', fontWeight: 700, color: '#fff' }}>
-                    {getInitials(emp.name)}
+            {employees.map((emp, i) => {
+              const empLeaves = leaves.filter(l => l.employee_id === emp.id && l.status === 'approved')
+              const used = empLeaves.reduce((s, l) => s + l.days, 0)
+              const remaining = Math.max(0, 15 - used)
+              return (
+                <motion.div key={emp.id} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.04 }}
+                  style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr 1fr', padding: '14px 20px', borderBottom: '1px solid rgba(255,255,255,0.04)', alignItems: 'center' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: avatarColors[i % avatarColors.length], display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', fontWeight: 700, color: '#fff' }}>
+                      {getInitials(emp.name)}
+                    </div>
+                    <span style={{ fontSize: '13px', fontWeight: 600, color: '#F8FAFC' }}>{emp.name}</span>
                   </div>
-                  <span style={{ fontSize: '13px', fontWeight: 600, color: '#F8FAFC' }}>{emp.name}</span>
-                </div>
-                <span style={{ fontSize: '13px', color: '#94A3B8' }}>{emp.annual} days</span>
-                <span style={{ fontSize: '13px', color: '#94A3B8' }}>{emp.sick} days</span>
-                <span style={{ fontSize: '13px', color: '#EF4444' }}>{emp.used} days</span>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <span style={{ fontSize: '13px', fontWeight: 600, color: '#10B981' }}>{emp.remaining} days</span>
-                  <div style={{ flex: 1, height: '4px', borderRadius: '2px', background: 'rgba(255,255,255,0.06)', maxWidth: '60px' }}>
-                    <div style={{ height: '100%', borderRadius: '2px', background: '#10B981', width: `${(emp.remaining / 25) * 100}%` }} />
+                  <span style={{ fontSize: '13px', color: '#94A3B8' }}>15 days</span>
+                  <span style={{ fontSize: '13px', color: '#94A3B8' }}>10 days</span>
+                  <span style={{ fontSize: '13px', color: '#EF4444' }}>{used} days</span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span style={{ fontSize: '13px', fontWeight: 600, color: '#10B981' }}>{remaining} days</span>
+                    <div style={{ flex: 1, height: '4px', borderRadius: '2px', background: 'rgba(255,255,255,0.06)', maxWidth: '60px' }}>
+                      <div style={{ height: '100%', borderRadius: '2px', background: '#10B981', width: `${(remaining / 15) * 100}%` }} />
+                    </div>
                   </div>
-                </div>
-              </motion.div>
-            ))}
+                </motion.div>
+              )
+            })}
           </div>
         )}
       </div>
@@ -256,19 +279,22 @@ export default function LeavePage() {
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-              {[
-                { label: 'Employee', key: 'employeeName', type: 'select', options: employees },
-                { label: 'Leave Type', key: 'type', type: 'select', options: leaveTypes },
-              ].map(field => (
-                <div key={field.key} style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                  <label style={{ fontSize: '12px', fontWeight: 500, color: '#94A3B8' }}>{field.label}</label>
-                  <select value={(form as any)[field.key]} onChange={e => setForm(p => ({ ...p, [field.key]: e.target.value }))}
-                    style={{ padding: '10px 14px', borderRadius: '10px', background: '#1A1A24', border: '1px solid rgba(255,255,255,0.08)', color: '#F8FAFC', fontSize: '13px', outline: 'none' }}>
-                    <option value="">Select...</option>
-                    {field.options.map(o => <option key={o} value={o}>{o}</option>)}
-                  </select>
-                </div>
-              ))}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                <label style={{ fontSize: '12px', fontWeight: 500, color: '#94A3B8' }}>Employee</label>
+                <select value={form.employeeId} onChange={e => setForm(p => ({ ...p, employeeId: e.target.value }))}
+                  style={{ padding: '10px 14px', borderRadius: '10px', background: '#1A1A24', border: '1px solid rgba(255,255,255,0.08)', color: '#F8FAFC', fontSize: '13px', outline: 'none' }}>
+                  <option value="">Select employee...</option>
+                  {employees.map(e => <option key={e.id} value={e.id}>{e.name} — {e.department}</option>)}
+                </select>
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                <label style={{ fontSize: '12px', fontWeight: 500, color: '#94A3B8' }}>Leave Type</label>
+                <select value={form.type} onChange={e => setForm(p => ({ ...p, type: e.target.value }))}
+                  style={{ padding: '10px 14px', borderRadius: '10px', background: '#1A1A24', border: '1px solid rgba(255,255,255,0.08)', color: '#F8FAFC', fontSize: '13px', outline: 'none' }}>
+                  {leaveTypes.map(t => <option key={t} value={t}>{t} Leave</option>)}
+                </select>
+              </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                 {[{ label: 'From', key: 'from' }, { label: 'To', key: 'to' }].map(f => (
@@ -280,15 +306,15 @@ export default function LeavePage() {
                 ))}
               </div>
 
-              {form.from && form.to && (
+              {form.from && form.to && calcDays(form.from, form.to) > 0 && (
                 <div style={{ padding: '10px 14px', borderRadius: '10px', background: 'rgba(99,102,241,0.08)', border: '1px solid rgba(99,102,241,0.15)' }}>
-                  <span style={{ fontSize: '13px', color: '#818CF8', fontWeight: 600 }}>{calcDays(form.from, form.to)} working days</span>
+                  <span style={{ fontSize: '13px', color: '#818CF8', fontWeight: 600 }}>{calcDays(form.from, form.to)} days requested</span>
                 </div>
               )}
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                 <label style={{ fontSize: '12px', fontWeight: 500, color: '#94A3B8' }}>Reason</label>
-                <textarea value={form.reason} onChange={e => setForm(p => ({ ...p, reason: e.target.value }))} placeholder="Brief reason for leave..." rows={3}
+                <textarea value={form.reason} onChange={e => setForm(p => ({ ...p, reason: e.target.value }))} placeholder="Brief reason..." rows={3}
                   style={{ padding: '10px 14px', borderRadius: '10px', background: '#1A1A24', border: '1px solid rgba(255,255,255,0.08)', color: '#F8FAFC', fontSize: '13px', outline: 'none', resize: 'none' }} />
               </div>
             </div>
@@ -298,23 +324,24 @@ export default function LeavePage() {
                 style={{ padding: '10px 20px', borderRadius: '10px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: '#94A3B8', fontSize: '13px', cursor: 'pointer', fontWeight: 500 }}>
                 Cancel
               </button>
-              <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={handleSave}
-                style={{ padding: '10px 24px', borderRadius: '10px', background: '#6366F1', border: 'none', color: '#fff', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}>
-                Submit Request
+              <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={handleSave} disabled={saving}
+                style={{ padding: '10px 24px', borderRadius: '10px', background: '#6366F1', border: 'none', color: '#fff', fontSize: '13px', fontWeight: 600, cursor: 'pointer', opacity: saving ? 0.7 : 1 }}>
+                {saving ? 'Saving...' : 'Submit Request'}
               </motion.button>
             </div>
           </motion.div>
         </div>
       )}
+
+      <style>{`
+        @keyframes spin { to { transform: rotate(360deg); } }
+        @media (max-width: 768px) {
+          .leave-stats { grid-template-columns: 1fr 1fr !important; }
+        }
+        @media (max-width: 480px) {
+          .leave-stats { grid-template-columns: 1fr !important; }
+        }
+      `}</style>
     </DashboardLayout>
   )
 }
-
-<style>{`
-  @media (max-width: 768px) {
-    .leave-stats { grid-template-columns: 1fr 1fr !important; }
-  }
-  @media (max-width: 480px) {
-    .leave-stats { grid-template-columns: 1fr !important; }
-  }
-`}</style>
