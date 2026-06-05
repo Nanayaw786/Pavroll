@@ -70,7 +70,7 @@ export default function AboutPage() {
       </nav>
 
       {/* Hero */}
-      <section style={{ padding: '100px 80px 80px', textAlign: 'center', maxWidth: '800px', margin: '0 auto' }}>
+      <section className="about-hero" style={{ padding: '100px 80px 80px', textAlign: 'center', maxWidth: '800px', margin: '0 auto' }}>
         <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
           <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '6px 14px', borderRadius: '999px', background: 'rgba(99,102,241,0.1)', border: '1px solid rgba(99,102,241,0.2)', marginBottom: '24px' }}>
             <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#6366F1' }} />
@@ -94,7 +94,7 @@ export default function AboutPage() {
 
       {/* Stats */}
       <section style={{ padding: '40px 80px', borderTop: '1px solid rgba(255,255,255,0.05)', borderBottom: '1px solid rgba(255,255,255,0.05)', background: 'rgba(255,255,255,0.01)' }}>
-        <div style={{ maxWidth: '1280px', margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '40px' }}>
+        <div className="about-stats" style={{ maxWidth: '1280px', margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '40px' }}>
           {stats.map((s, i) => (
             <motion.div key={s.label} initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.08 }} viewport={{ once: true }} style={{ textAlign: 'center' }}>
               <p style={{ fontSize: '36px', fontWeight: 800, color: '#6366F1' }}>{s.value}</p>
@@ -106,7 +106,7 @@ export default function AboutPage() {
 
       {/* Mission */}
       <section style={{ padding: '100px 80px', maxWidth: '1280px', margin: '0 auto' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '80px', alignItems: 'center' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '80px', alignItems: 'center' }} className="about-mission">
           <motion.div initial={{ opacity: 0, x: -24 }} whileInView={{ opacity: 1, x: 0 }} transition={{ duration: 0.6 }} viewport={{ once: true }}>
             <h2 style={{ fontSize: '40px', fontWeight: 800, letterSpacing: '-0.02em', marginBottom: '20px' }}>Our Mission</h2>
             <p style={{ fontSize: '16px', color: '#64748B', lineHeight: 1.8, marginBottom: '20px' }}>
@@ -149,7 +149,7 @@ export default function AboutPage() {
             <h2 style={{ fontSize: '40px', fontWeight: 800, letterSpacing: '-0.02em' }}>Why Pavroll for Ghana?</h2>
             <p style={{ fontSize: '16px', color: '#64748B', marginTop: '12px' }}>Not a generic global payroll tool. Built from the ground up for Ghana.</p>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px' }}>
+          <div className="about-why" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px' }}>
             {whyGhana.map((item, i) => (
               <motion.div key={item.title} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.08 }} viewport={{ once: true }}
                 style={{ padding: '28px', borderRadius: '16px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)' }}>
@@ -170,7 +170,7 @@ export default function AboutPage() {
           <h2 style={{ fontSize: '40px', fontWeight: 800, letterSpacing: '-0.02em' }}>Everything you need</h2>
           <p style={{ fontSize: '16px', color: '#64748B', marginTop: '12px' }}>One tool. Complete payroll management for your Ghanaian business.</p>
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px' }}>
+        <div className="about-features" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px' }}>
           {features.map((f, i) => (
             <motion.div key={f.title} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.08 }} viewport={{ once: true }}
               style={{ padding: '28px', borderRadius: '18px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)' }}>
@@ -208,7 +208,7 @@ export default function AboutPage() {
           <h2 style={{ fontSize: '40px', fontWeight: 800, letterSpacing: '-0.02em' }}>The Team</h2>
           <p style={{ fontSize: '16px', color: '#64748B', marginTop: '12px' }}>Small team. Big vision. Built in Ghana.</p>
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '24px', maxWidth: '800px', margin: '0 auto' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '24px', maxWidth: '800px', margin: '0 auto' }} className="about-team">
           {team.map((member, i) => (
             <motion.div key={member.name} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }} viewport={{ once: true }}
               style={{ padding: '32px', borderRadius: '20px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', textAlign: 'center' }}>
@@ -230,7 +230,7 @@ export default function AboutPage() {
             <h2 style={{ fontSize: '40px', fontWeight: 800, letterSpacing: '-0.02em' }}>What our clients say</h2>
             <p style={{ fontSize: '16px', color: '#64748B', marginTop: '12px' }}>Ghanaian businesses trust Pavroll every month.</p>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '20px' }}>
+          <div className="about-testimonials" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '20px' }}>
             {testimonials.map((t, i) => (
               <motion.div key={t.name} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.08 }} viewport={{ once: true }}
                 style={{ padding: '28px', borderRadius: '18px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)' }}>
@@ -255,7 +255,7 @@ export default function AboutPage() {
 
       {/* Contact Form */}
       <section style={{ padding: '100px 80px', maxWidth: '1280px', margin: '0 auto' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '80px', alignItems: 'start' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '80px', alignItems: 'start' }} className="about-contact">
           <motion.div initial={{ opacity: 0, x: -24 }} whileInView={{ opacity: 1, x: 0 }} transition={{ duration: 0.6 }} viewport={{ once: true }}>
             <h2 style={{ fontSize: '40px', fontWeight: 800, letterSpacing: '-0.02em', marginBottom: '20px' }}>Get in touch</h2>
             <p style={{ fontSize: '16px', color: '#64748B', lineHeight: 1.7, marginBottom: '36px' }}>
@@ -326,7 +326,7 @@ export default function AboutPage() {
       </section>
 
       {/* Footer */}
-      <footer style={{ padding: '32px 80px', borderTop: '1px solid rgba(255,255,255,0.06)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
+      <footer className="about-footer" style={{ padding: '32px 80px', borderTop: '1px solid rgba(255,255,255,0.06)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <div style={{ width: '24px', height: '24px', borderRadius: '6px', background: 'linear-gradient(135deg,#6366F1,#818CF8)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <Zap size={12} color="white" fill="white" />
@@ -343,8 +343,23 @@ export default function AboutPage() {
 
       <style>{`
         @media (max-width: 900px) {
-          section { padding-left: 24px !important; padding-right: 24px !important; }
+          section { padding-left: 24px !important; padding-right: 24px !important; padding-top: 60px !important; padding-bottom: 60px !important; }
           nav { padding: 0 20px !important; }
+          .about-hero { padding: 60px 24px 40px !important; }
+          .about-hero h1 { font-size: 36px !important; }
+          .about-mission { grid-template-columns: 1fr !important; gap: 32px !important; }
+          .about-why { grid-template-columns: 1fr !important; }
+          .about-features { grid-template-columns: 1fr !important; }
+          .about-team { grid-template-columns: 1fr !important; }
+          .about-testimonials { grid-template-columns: 1fr !important; }
+          .about-contact { grid-template-columns: 1fr !important; gap: 40px !important; }
+          .about-stats { grid-template-columns: 1fr 1fr !important; gap: 20px !important; padding: 24px !important; }
+          .about-footer { flex-direction: column !important; text-align: center !important; padding: 24px !important; }
+          .about-cta h2 { font-size: 32px !important; }
+        }
+        @media (max-width: 480px) {
+          .about-hero h1 { font-size: 28px !important; }
+          .about-stats { grid-template-columns: 1fr !important; }
         }
       `}</style>
     </div>
