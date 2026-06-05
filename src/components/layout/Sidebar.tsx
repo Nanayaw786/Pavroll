@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useState, useEffect } from 'react'
+import { useClerk, useUser } from '@clerk/nextjs'
 import {
   LayoutDashboard, Users, CreditCard, FileText,
   Calendar, BarChart3, Settings, LogOut, Zap,
@@ -23,6 +24,8 @@ const navItems = [
 
 function SidebarContent({ onClose }: { onClose?: () => void }) {
   const pathname = usePathname()
+  const { signOut } = useClerk()
+  const { user } = useUser()
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       {/* Logo */}
@@ -70,7 +73,7 @@ function SidebarContent({ onClose }: { onClose?: () => void }) {
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '9px 12px', borderRadius: '10px', cursor: 'pointer', color: '#475569' }}>
           <LogOut size={16} />
-          <span style={{ fontSize: '13px', fontWeight: 500 }}>Sign Out</span>
+          <span style={{ fontSize: '13px', fontWeight: 500 }} onClick={() => signOut({ redirectUrl: '/sign-in' })}>Sign Out</span>
         </div>
       </div>
     </div>
