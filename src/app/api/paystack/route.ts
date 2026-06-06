@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { rateLimit, getClientIP } from '@/lib/rateLimit'
 
 const PAYSTACK_SECRET = process.env.PAYSTACK_SECRET_KEY!
 
@@ -11,6 +12,12 @@ const PLANS = {
 
 // Initialize transaction
 export async function POST(req: NextRequest) {
+  // Rate limit: 10 payment attempts per hour per IP
+  const ip = getClientIP(req)
+  const limit = rateLimit(`paystack_${ip}`, { maxRequests: 10, windowMs: 60 * 60 * 1000 })
+  if (!limit.success) {
+    return NextResponse.json({ error: 'Too many requests. Please try again later.' }, { status: 429 })
+  }
   try {
     const { email, plan, companyName } = await req.json()
     const selectedPlan = PLANS[plan as keyof typeof PLANS]

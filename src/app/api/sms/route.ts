@@ -1,9 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { sendSMS, sendBulkSMS, payslipSMSMessage, leaveApprovedSMSMessage, leaveRejectedSMSMessage, payrollSummarySMSMessage } from '@/lib/sms'
+import { rateLimit, getClientIP } from '@/lib/rateLimit'
 
 export async function POST(req: NextRequest) {
+  // Rate limit: 50 SMS requests per hour per IP
+  const ip = getClientIP(req)
+  const limit = rateLimit(`sms_${ip}`, { maxRequests: 50, windowMs: 60 * 60 * 1000 })
+  if (!limit.success) {
+    return NextResponse.json({ error: 'Too many requests. Please try again later.' }, { status: 429 })
+  }
   try {
-    const { type, data } = await req.json()
+    const body = await req.json()
+    const { sanitizeString, sanitizePhone } = await import('@/lib/sanitize')
+    const type = sanitizeString(body.type || '')
+    const data = body.data || {}
 
     switch (type) {
       case 'payslip': {

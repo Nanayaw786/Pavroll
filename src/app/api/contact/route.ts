@@ -1,14 +1,34 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { Resend } from 'resend'
+import { rateLimit, getClientIP } from '@/lib/rateLimit'
 
 const resend = new Resend(process.env.RESEND_API_KEY)
 
 export async function POST(req: NextRequest) {
+  // Rate limit: 5 contact form submissions per hour per IP
+  const ip = getClientIP(req)
+  const limit = rateLimit(`contact_${ip}`, { maxRequests: 5, windowMs: 60 * 60 * 1000 })
+  if (!limit.success) {
+    return NextResponse.json({ error: 'Too many requests. Please try again later.' }, { status: 429 })
+  }
   try {
-    const { name, email, company, subject, message } = await req.json()
+    const body = await req.json()
+    const { sanitizeString, sanitizeEmail, validateEmail } = await import('@/lib/sanitize')
+
+    const name = sanitizeString(body.name || '')
+    const email = sanitizeEmail(body.email || '')
+    const company = sanitizeString(body.company || '')
+    const subject = sanitizeString(body.subject || '')
+    const message = sanitizeString(body.message || '')
 
     if (!name || !email || !message) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
+    }
+    if (!validateEmail(email)) {
+      return NextResponse.json({ error: 'Invalid email address' }, { status: 400 })
+    }
+    if (message.length > 2000) {
+      return NextResponse.json({ error: 'Message too long' }, { status: 400 })
     }
 
     await resend.emails.send({
