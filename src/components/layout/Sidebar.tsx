@@ -7,7 +7,7 @@ import { useClerk, useUser } from '@clerk/nextjs'
 import {
   LayoutDashboard, Users, CreditCard, FileText,
   Calendar, BarChart3, Settings, LogOut, Zap,
-  Shield, UserX, Menu, X, MessageSquare
+  Shield, UserX, Menu, X, MessageSquare, UsersRound
 } from 'lucide-react'
 
 const navItems = [
@@ -20,6 +20,7 @@ const navItems = [
   { href: '/audit', icon: Shield, label: 'Audit Trail' },
   { href: '/offboarding', icon: UserX, label: 'Offboarding' },
   { href: '/sms', icon: MessageSquare, label: 'Bulk SMS' },
+  { href: '/team', icon: UsersRound, label: 'Team' },
   { href: '/settings', icon: Settings, label: 'Settings' },
 ]
 
