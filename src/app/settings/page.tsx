@@ -319,9 +319,26 @@ export default function SettingsPage() {
                       </div>
                     ))}
                   </div>
-                  <button style={{ width: '100%', padding: '9px', borderRadius: '9px', background: plan.current ? 'rgba(255,255,255,0.05)' : plan.color, border: plan.current ? '1px solid rgba(255,255,255,0.08)' : 'none', color: plan.current ? '#475569' : '#fff', fontSize: '13px', fontWeight: 600, cursor: plan.current ? 'default' : 'pointer' }}>
+                  <motion.button whileHover={{ scale: plan.current ? 1 : 1.02 }} whileTap={{ scale: plan.current ? 1 : 0.98 }}
+                    onClick={async () => {
+                      if (plan.current) return
+                      const planKey = plan.name.toLowerCase()
+                      const res = await fetch('/api/paystack', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                          email: company?.email || 'admin@company.com',
+                          plan: planKey,
+                          companyName: companyForm.name,
+                        })
+                      })
+                      const data = await res.json()
+                      if (data.success) window.location.href = data.url
+                      else setResult({ success: false, message: 'Payment initialization failed' })
+                    }}
+                    style={{ width: '100%', padding: '9px', borderRadius: '9px', background: plan.current ? 'rgba(255,255,255,0.05)' : plan.color, border: plan.current ? '1px solid rgba(255,255,255,0.08)' : 'none', color: plan.current ? '#475569' : '#fff', fontSize: '13px', fontWeight: 600, cursor: plan.current ? 'default' : 'pointer' }}>
                     {plan.current ? 'Current Plan' : `Upgrade to ${plan.name}`}
-                  </button>
+                  </motion.button>
                 </motion.div>
               ))}
             </div>
