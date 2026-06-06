@@ -18,15 +18,25 @@ export default function ContactPage() {
   const [sent, setSent] = useState(false)
   const [sending, setSending] = useState(false)
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!form.name || !form.email || !form.message) return
     setSending(true)
-    setTimeout(() => {
+    try {
+      const res = await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(form),
+      })
+      if (res.ok) {
+        setSent(true)
+        setForm({ name: '', email: '', company: '', subject: '', message: '' })
+        setTimeout(() => setSent(false), 5000)
+      }
+    } catch (err) {
+      console.error(err)
+    } finally {
       setSending(false)
-      setSent(true)
-      setForm({ name: '', email: '', company: '', subject: '', message: '' })
-      setTimeout(() => setSent(false), 5000)
-    }, 1500)
+    }
   }
 
   return (
@@ -63,9 +73,9 @@ export default function ContactPage() {
       <section style={{ padding: '0 80px 60px', maxWidth: '1280px', margin: '0 auto' }}>
         <div className="contact-cards" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
           {[
-            { icon: Mail, title: 'Email Us', value: 'hello@pavroll.app', desc: 'We reply within 24 hours', color: '#6366F1', bg: 'rgba(99,102,241,0.08)' },
-            { icon: Phone, title: 'Call Us', value: '+233 XX XXX XXXX', desc: 'Mon–Fri, 9am–6pm GMT', color: '#10B981', bg: 'rgba(16,185,129,0.08)' },
-            { icon: MapPin, title: 'Visit Us', value: 'Accra, Ghana 🇬🇭', desc: 'By appointment only', color: '#F59E0B', bg: 'rgba(245,158,11,0.08)' },
+            { icon: Mail, title: 'Email Us', value: 'hello.pavroll@proton.me', desc: 'We reply within 24 hours', color: '#6366F1', bg: 'rgba(99,102,241,0.08)' },
+            { icon: Phone, title: 'Call Us', value: '+233 53 929 9311', desc: 'Mon–Fri, 9am–6pm GMT', color: '#10B981', bg: 'rgba(16,185,129,0.08)' },
+            { icon: MapPin, title: 'Visit Us', value: 'Cape Coast, Ghana 🇬🇭', desc: 'By appointment only', color: '#F59E0B', bg: 'rgba(245,158,11,0.08)' },
           ].map((item, i) => (
             <motion.div key={item.title} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }}
               style={{ padding: '28px', borderRadius: '16px', background: item.bg, border: `1px solid ${item.color}20`, textAlign: 'center' }}>
