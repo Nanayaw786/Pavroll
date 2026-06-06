@@ -3,7 +3,7 @@ import DashboardLayout from '@/components/layout/DashboardLayout'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useState, useEffect } from 'react'
 import { Settings, MessageSquare, CheckCircle, Clock, XCircle, Plus, Loader2, Building2, Bell } from 'lucide-react'
-import Script from 'next/script'
+
 import { getSenderIdRequests, createSenderIdRequest, type SenderIdRequest } from '@/lib/senderIdDb'
 import { getCompanyId } from '@/lib/employees'
 import { supabase } from '@/lib/supabase'
@@ -383,7 +383,7 @@ export default function SettingsPage() {
         )}
 
         <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-        <Script src="https://js.paystack.co/v1/inline.js" strategy="lazyOnload" />
+
       </div>
     </DashboardLayout>
   )
