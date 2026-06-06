@@ -88,3 +88,60 @@ body {
     linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
   background-size: 40px 40px;
 }
+
+/* ===== GLOBAL MOBILE FIXES ===== */
+@media (max-width: 768px) {
+
+  /* Trial Banner */
+  .trial-banner-inner {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 8px !important;
+  }
+
+  /* Leave page */
+  .leave-table-header { display: none !important; }
+  .leave-table-row {
+    grid-template-columns: 1fr !important;
+    gap: 6px !important;
+  }
+  .leave-table-row > *:nth-child(3),
+  .leave-table-row > *:nth-child(4) { display: none !important; }
+
+  /* Payroll table */
+  .payroll-table-header { display: none !important; }
+  .payroll-table-row {
+    grid-template-columns: 1fr auto !important;
+  }
+  .payroll-table-row > *:nth-child(2),
+  .payroll-table-row > *:nth-child(3),
+  .payroll-table-row > *:nth-child(4),
+  .payroll-table-row > *:nth-child(5) { display: none !important; }
+
+  /* Payslips table */
+  .payslip-table-header { display: none !important; }
+  .payslip-table-row {
+    grid-template-columns: 1fr auto !important;
+  }
+  .payslip-table-row > *:nth-child(2),
+  .payslip-table-row > *:nth-child(3),
+  .payslip-table-row > *:nth-child(4) { display: none !important; }
+
+  /* SMS page */
+  .sms-grid { grid-template-columns: 1fr !important; }
+  .sms-stats { grid-template-columns: 1fr !important; }
+
+  /* Settings page */
+  .settings-tabs { flex-wrap: wrap !important; }
+  .settings-plans { grid-template-columns: 1fr !important; }
+  .settings-form { grid-template-columns: 1fr !important; }
+
+  /* Reports page */
+  .reports-grid { grid-template-columns: 1fr !important; }
+  .reports-stats { grid-template-columns: 1fr 1fr !important; }
+}
+
+@media (max-width: 480px) {
+  .reports-stats { grid-template-columns: 1fr !important; }
+  .sms-stats { grid-template-columns: 1fr !important; }
+}

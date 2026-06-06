@@ -137,7 +137,7 @@ export default function SettingsPage() {
       <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', width: '100%' }}>
 
         {/* Tabs */}
-        <div style={{ display: 'flex', gap: '4px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '10px', padding: '4px', width: 'fit-content', flexWrap: 'wrap' }}>
+        <div className="settings-tabs" style={{ display: 'flex', gap: '4px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '10px', padding: '4px', width: 'fit-content', flexWrap: 'wrap' }}>
           {([
             { key: 'general', label: 'Company', icon: Building2 },
             { key: 'senderid', label: 'SMS Sender ID', icon: MessageSquare },
@@ -170,7 +170,7 @@ export default function SettingsPage() {
         {tab === 'general' && (
           <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '16px', padding: '24px', maxWidth: '640px' }}>
             <h3 style={{ fontWeight: 600, color: '#F8FAFC', fontSize: '15px', marginBottom: '20px' }}>Company Details</h3>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
+            <div className="settings-form" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
               {[
                 { label: 'Company Name', key: 'name', placeholder: 'Acme Ghana Ltd' },
                 { label: 'Email', key: 'email', placeholder: 'hr@company.com' },
@@ -321,7 +321,7 @@ export default function SettingsPage() {
             </div>
 
             <h3 style={{ fontWeight: 600, color: '#F8FAFC', fontSize: '15px' }}>Available Plans</h3>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
+            <div className="settings-plans" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
               {plans.map((plan, i) => (
                 <motion.div key={plan.name} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.08 }}
                   style={{ padding: '24px', borderRadius: '16px', background: plan.current ? `${plan.color}10` : 'rgba(255,255,255,0.02)', border: `1px solid ${plan.current ? plan.color + '30' : 'rgba(255,255,255,0.06)'}`, position: 'relative' }}>

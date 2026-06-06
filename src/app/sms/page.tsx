@@ -149,7 +149,7 @@ export default function SMSPage() {
       <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', width: '100%' }}>
 
         {/* Stats */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '14px' }}>
+        <div className="sms-stats" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '14px' }}>
           {[
             { label: 'Total Employees', value: employees.length, color: '#6366F1', bg: 'rgba(99,102,241,0.08)', icon: Users },
             { label: 'SMS Sent Today', value: logs.filter(l => l.status === 'sent').length, color: '#10B981', bg: 'rgba(16,185,129,0.08)', icon: CheckCircle },
@@ -199,7 +199,7 @@ export default function SMSPage() {
 
         {/* Bulk SMS Tab */}
         {tab === 'bulk' && (
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+          <div className="sms-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
 
             {/* Employee selection */}
             <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '16px', overflow: 'hidden' }}>
