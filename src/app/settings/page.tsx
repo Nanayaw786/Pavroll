@@ -3,6 +3,7 @@ import DashboardLayout from '@/components/layout/DashboardLayout'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useState, useEffect } from 'react'
 import { Settings, MessageSquare, CheckCircle, Clock, XCircle, Plus, Loader2, Building2, Bell } from 'lucide-react'
+import Script from 'next/script'
 import { getSenderIdRequests, createSenderIdRequest, type SenderIdRequest } from '@/lib/senderIdDb'
 import { getCompanyId } from '@/lib/employees'
 import { supabase } from '@/lib/supabase'
@@ -30,6 +31,24 @@ export default function SettingsPage() {
   const [form, setForm] = useState({ sender_id: '', purpose: '' })
   const [result, setResult] = useState<{ success: boolean, message: string } | null>(null)
   const [companyForm, setCompanyForm] = useState({ name: '', email: '', phone: '', address: '', tin: '', ssnit_employer_code: '' })
+  const [payingPlan, setPayingPlan] = useState<string | null>(null)
+
+  const handlePaystack = (planKey: string, amount: number, planName: string) => {
+    if (typeof window === 'undefined') return
+    const handler = (window as any).PaystackPop.setup({
+      key: process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY || 'pk_live_eaf1f4d99ab4aa521121a6b9760925cfb5eaa60d',
+      email: company?.email || 'admin@company.com',
+      amount: amount * 100,
+      currency: 'GHS',
+      metadata: { plan: planKey, company_name: companyForm.name, plan_name: planName },
+      callback: (response: any) => {
+        setResult({ success: true, message: `Payment successful! Reference: ${response.reference}` })
+        setPayingPlan(null)
+      },
+      onClose: () => { setPayingPlan(null) }
+    })
+    handler.openIframe()
+  }
 
   useEffect(() => { loadData() }, [])
 
@@ -320,24 +339,15 @@ export default function SettingsPage() {
                     ))}
                   </div>
                   <motion.button whileHover={{ scale: plan.current ? 1 : 1.02 }} whileTap={{ scale: plan.current ? 1 : 0.98 }}
-                    onClick={async () => {
+                    onClick={() => {
                       if (plan.current) return
+                      const amounts: Record<string, number> = { starter: 120, growth: 350, business: 800 }
                       const planKey = plan.name.toLowerCase()
-                      const res = await fetch('/api/paystack', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                          email: company?.email || 'admin@company.com',
-                          plan: planKey,
-                          companyName: companyForm.name,
-                        })
-                      })
-                      const data = await res.json()
-                      if (data.success) window.location.href = data.url
-                      else setResult({ success: false, message: 'Payment initialization failed' })
+                      setPayingPlan(planKey)
+                      handlePaystack(planKey, amounts[planKey], plan.name)
                     }}
-                    style={{ width: '100%', padding: '9px', borderRadius: '9px', background: plan.current ? 'rgba(255,255,255,0.05)' : plan.color, border: plan.current ? '1px solid rgba(255,255,255,0.08)' : 'none', color: plan.current ? '#475569' : '#fff', fontSize: '13px', fontWeight: 600, cursor: plan.current ? 'default' : 'pointer' }}>
-                    {plan.current ? 'Current Plan' : `Upgrade to ${plan.name}`}
+                    style={{ width: '100%', padding: '9px', borderRadius: '9px', background: plan.current ? 'rgba(255,255,255,0.05)' : plan.color, border: plan.current ? '1px solid rgba(255,255,255,0.08)' : 'none', color: plan.current ? '#475569' : '#fff', fontSize: '13px', fontWeight: 600, cursor: plan.current ? 'default' : 'pointer', opacity: payingPlan === plan.name.toLowerCase() ? 0.7 : 1 }}>
+                    {payingPlan === plan.name.toLowerCase() ? 'Opening...' : plan.current ? 'Current Plan' : `Upgrade to ${plan.name}`}
                   </motion.button>
                 </motion.div>
               ))}
@@ -373,6 +383,7 @@ export default function SettingsPage() {
         )}
 
         <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+        <Script src="https://js.paystack.co/v1/inline.js" strategy="lazyOnload" />
       </div>
     </DashboardLayout>
   )
