@@ -4,30 +4,35 @@ import { usePathname } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useState, useEffect } from 'react'
 import { useClerk, useUser } from '@clerk/nextjs'
+import { useCompanyFeatures } from '@/hooks/useCompanyFeatures'
 import {
   LayoutDashboard, Users, CreditCard, FileText,
   Calendar, BarChart3, Settings, LogOut, Zap,
   Shield, UserX, Menu, X, MessageSquare, UsersRound
 } from 'lucide-react'
 
-const navItems = [
-  { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
-  { href: '/employees', icon: Users, label: 'Employees' },
-  { href: '/payroll', icon: CreditCard, label: 'Payroll' },
-  { href: '/payslips', icon: FileText, label: 'Payslips' },
-  { href: '/leave', icon: Calendar, label: 'Leave' },
-  { href: '/reports', icon: BarChart3, label: 'Reports' },
-  { href: '/audit', icon: Shield, label: 'Audit Trail' },
-  { href: '/offboarding', icon: UserX, label: 'Offboarding' },
-  { href: '/sms', icon: MessageSquare, label: 'Bulk SMS' },
-  { href: '/team', icon: UsersRound, label: 'Team' },
-  { href: '/settings', icon: Settings, label: 'Settings' },
-]
+
 
 function SidebarContent({ onClose }: { onClose?: () => void }) {
   const pathname = usePathname()
   const { signOut } = useClerk()
   const { user } = useUser()
+  const { features } = useCompanyFeatures()
+
+  const navItems = [
+    { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard', show: true },
+    { href: '/employees', icon: Users, label: 'Employees', show: true },
+    { href: '/payroll', icon: CreditCard, label: 'Payroll', show: true },
+    { href: '/payslips', icon: FileText, label: 'Payslips', show: true },
+    { href: '/leave', icon: Calendar, label: 'Leave', show: true },
+    { href: '/reports', icon: BarChart3, label: 'Reports', show: true },
+    { href: '/audit', icon: Shield, label: 'Audit Trail', show: true },
+    { href: '/offboarding', icon: UserX, label: 'Offboarding', show: features.offboarding },
+    { href: '/sms', icon: MessageSquare, label: 'Bulk SMS', show: features.bulk_sms },
+    { href: '/team', icon: UsersRound, label: 'Team', show: true },
+    { href: '/settings', icon: Settings, label: 'Settings', show: true },
+  ].filter(item => item.show)
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       {/* Logo */}
