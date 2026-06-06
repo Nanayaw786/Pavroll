@@ -13,7 +13,8 @@ export async function POST(req: NextRequest) {
 
     await resend.emails.send({
       from: 'Pavroll Contact <onboarding@resend.dev>',
-      to: 'hello.pavroll@proton.me',
+      to: ['hello.pavroll@proton.me', 'samuelannanemensah@gmail.com'],
+      replyTo: email,
       subject: `[Pavroll Contact] ${subject || 'New message'} — from ${name}`,
       html: `
         <div style="font-family: Inter, Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #f8fafc; padding: 40px; border-radius: 12px;">

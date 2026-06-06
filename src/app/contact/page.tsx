@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { Zap, ArrowLeft, Mail, Phone, MapPin, MessageSquare, Clock, CheckCircle } from 'lucide-react'
 import { useState } from 'react'
+import { useForm, ValidationError } from '@formspree/react'
 
 const faqs = [
   { q: 'How long does setup take?', a: 'Most companies are up and running in under 5 minutes. Add your company details, import your employees and run your first payroll.' },
@@ -15,28 +16,19 @@ const faqs = [
 
 export default function ContactPage() {
   const [form, setForm] = useState({ name: '', email: '', company: '', subject: '', message: '' })
-  const [sent, setSent] = useState(false)
-  const [sending, setSending] = useState(false)
+  const [state, handleFormspree] = useForm('mwvjvqpn')
+  const sent = state.succeeded
+  const sending = state.submitting
 
   const handleSubmit = async () => {
     if (!form.name || !form.email || !form.message) return
-    setSending(true)
-    try {
-      const res = await fetch('/api/contact', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form),
-      })
-      if (res.ok) {
-        setSent(true)
-        setForm({ name: '', email: '', company: '', subject: '', message: '' })
-        setTimeout(() => setSent(false), 5000)
-      }
-    } catch (err) {
-      console.error(err)
-    } finally {
-      setSending(false)
-    }
+    await handleFormspree({
+      name: form.name,
+      email: form.email,
+      company: form.company,
+      subject: form.subject,
+      message: form.message,
+    } as any)
   }
 
   return (
