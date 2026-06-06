@@ -1,4 +1,5 @@
 'use client'
+import TrialBanner from '@/components/ui/TrialBanner'
 import Sidebar from './Sidebar'
 import Topbar from './Topbar'
 import { motion } from 'framer-motion'
@@ -11,6 +12,7 @@ export default function DashboardLayout({ children, title }: { children: React.R
       {/* Main content */}
       <div className="main-content" style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, overflowX: 'hidden' }}>
         <Topbar title={title} />
+        <TrialBanner />
         <motion.main
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
