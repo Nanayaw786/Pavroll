@@ -2,7 +2,7 @@
 import DashboardLayout from '@/components/layout/DashboardLayout'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useState, useEffect } from 'react'
-import { Settings, MessageSquare, CheckCircle, Clock, XCircle, Plus, Loader2, Building2, Bell } from 'lucide-react'
+import { Settings, MessageSquare, CheckCircle, Clock, XCircle, Plus, Loader2, Building2, Bell, CreditCard } from 'lucide-react'
 
 import { getSenderIdRequests, createSenderIdRequest, type SenderIdRequest } from '@/lib/senderIdDb'
 import { getCompanyId } from '@/lib/employees'
