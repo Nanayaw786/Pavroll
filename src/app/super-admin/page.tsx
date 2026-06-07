@@ -728,8 +728,6 @@ export default function SuperAdminPage() {
                       </div>
                     </div>
 
-                    {/* Lead Source */}
-                    <LeadSourceChart companies={companies} />
                   </>
                 )}
               </div>
@@ -810,6 +808,10 @@ export default function SuperAdminPage() {
                     )
                   })}
                 </div>
+
+                {/* Lead Source */}
+                <LeadSourceChart companies={companies} />
+
               </div>
             )}
 
