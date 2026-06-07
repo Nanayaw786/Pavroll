@@ -27,6 +27,12 @@ export default function SettingsPage() {
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
   const [saving, setSaving] = useState(false)
+  const [leadSource, setLeadSource] = useState('')
+  const [leadSourceDetail, setLeadSourceDetail] = useState('')
+  const [savingLeadSource, setSavingLeadSource] = useState(false)
+  const [referralCode, setReferralCode] = useState('')
+  const [applyingCode, setApplyingCode] = useState(false)
+  const [companyReferralCode, setCompanyReferralCode] = useState('')
   const [tab, setTab] = useState<'general' | 'senderid' | 'billing' | 'notifications'>('general')
   const [form, setForm] = useState({ sender_id: '', purpose: '' })
   const [result, setResult] = useState<{ success: boolean, message: string } | null>(null)
@@ -91,6 +97,9 @@ export default function SettingsPage() {
           tin: companyData.tin || '',
           ssnit_employer_code: companyData.ssnit_employer_code || '',
         })
+        if (companyData.lead_source) setLeadSource(companyData.lead_source)
+        if (companyData.lead_source_detail) setLeadSourceDetail(companyData.lead_source_detail)
+        if (companyData.referral_code) setCompanyReferralCode(companyData.referral_code)
         if (companyData.payroll_settings) {
           setPayrollSettings(prev => ({ ...prev, ...companyData.payroll_settings }))
         }
@@ -102,6 +111,34 @@ export default function SettingsPage() {
     } finally {
       setLoading(false)
     }
+  }
+
+  const handleSaveLeadSource = async () => {
+    if (!leadSource) return
+    setSavingLeadSource(true)
+    try {
+      await supabase.from('companies').update({ lead_source: leadSource, lead_source_detail: leadSourceDetail }).eq('id', companyId)
+      setResult({ success: true, message: 'Thank you for letting us know!' })
+      setTimeout(() => setResult(null), 3000)
+    } catch { setResult({ success: false, message: 'Failed to save' }) }
+    finally { setSavingLeadSource(false) }
+  }
+
+  const handleApplyReferralCode = async () => {
+    if (!referralCode) return
+    setApplyingCode(true)
+    try {
+      const { applyReferralCode } = await import('@/lib/referrals')
+      const success = await applyReferralCode(companyId, referralCode)
+      if (success) {
+        setCompanyReferralCode(referralCode.toUpperCase())
+        setResult({ success: true, message: `Referral code ${referralCode.toUpperCase()} applied!` })
+      } else {
+        setResult({ success: false, message: 'Invalid referral code. Please check and try again.' })
+      }
+      setTimeout(() => setResult(null), 4000)
+    } catch { setResult({ success: false, message: 'Failed to apply referral code' }) }
+    finally { setApplyingCode(false) }
   }
 
   const handleSaveCompany = async () => {
@@ -223,6 +260,60 @@ export default function SettingsPage() {
               style={{ marginTop: '20px', padding: '10px 24px', borderRadius: '10px', background: '#6366F1', border: 'none', color: '#fff', fontSize: '13px', fontWeight: 600, cursor: 'pointer', opacity: saving ? 0.7 : 1 }}>
               {saving ? 'Saving...' : 'Save Changes'}
             </motion.button>
+
+            {/* Where did you hear about us */}
+            <div style={{ marginTop: '20px', padding: '20px', borderRadius: '14px', background: 'rgba(16,185,129,0.06)', border: '1px solid rgba(16,185,129,0.15)' }}>
+              <h4 style={{ fontSize: '14px', fontWeight: 600, color: '#F8FAFC', marginBottom: '4px' }}>📣 Where did you hear about Pavroll?</h4>
+              <p style={{ fontSize: '12px', color: '#475569', marginBottom: '14px' }}>Help us understand how you found us</p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                <select value={leadSource} onChange={e => setLeadSource(e.target.value)}
+                  style={{ padding: '9px 14px', borderRadius: '9px', background: '#1A1A24', border: '1px solid rgba(255,255,255,0.08)', color: leadSource ? '#F8FAFC' : '#475569', fontSize: '13px', outline: 'none' }}>
+                  <option value="">-- Select --</option>
+                  <option value="tiktok">TikTok</option>
+                  <option value="whatsapp">WhatsApp</option>
+                  <option value="facebook">Facebook</option>
+                  <option value="instagram">Instagram</option>
+                  <option value="linkedin">LinkedIn</option>
+                  <option value="twitter">Twitter / X</option>
+                  <option value="google">Google Search</option>
+                  <option value="referral">Friend / Colleague</option>
+                  <option value="partner">Business Registration Agent</option>
+                  <option value="accountant">Accountant</option>
+                  <option value="event">Event / Conference</option>
+                  <option value="other">Other</option>
+                </select>
+                {(leadSource === 'referral' || leadSource === 'other' || leadSource === 'partner' || leadSource === 'accountant') && (
+                  <input value={leadSourceDetail} onChange={e => setLeadSourceDetail(e.target.value)}
+                    placeholder={leadSource === 'referral' ? 'Who referred you?' : leadSource === 'partner' ? "Agent's name?" : 'Please specify'}
+                    style={{ padding: '9px 14px', borderRadius: '9px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: '#F8FAFC', fontSize: '13px', outline: 'none' }} />
+                )}
+                {leadSource && (
+                  <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={handleSaveLeadSource} disabled={savingLeadSource}
+                    style={{ padding: '9px 18px', borderRadius: '9px', background: '#10B981', border: 'none', color: '#fff', fontSize: '13px', fontWeight: 600, cursor: 'pointer', opacity: savingLeadSource ? 0.7 : 1, width: 'fit-content' }}>
+                    {savingLeadSource ? 'Saving...' : '💾 Save'}
+                  </motion.button>
+                )}
+              </div>
+            </div>
+
+            {/* Referral Code */}
+            <div style={{ marginTop: '16px', padding: '20px', borderRadius: '14px', background: 'rgba(99,102,241,0.06)', border: '1px solid rgba(99,102,241,0.15)' }}>
+              <h4 style={{ fontSize: '14px', fontWeight: 600, color: '#F8FAFC', marginBottom: '4px' }}>🎁 Referral Code</h4>
+              <p style={{ fontSize: '12px', color: '#475569', marginBottom: '14px' }}>
+                {companyReferralCode ? `✅ Applied code: ${companyReferralCode}` : 'Enter a referral code if you were referred by a partner'}
+              </p>
+              {!companyReferralCode && (
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <input value={referralCode} onChange={e => setReferralCode(e.target.value.toUpperCase())}
+                    placeholder="e.g. MAXWELL100"
+                    style={{ flex: 1, padding: '9px 14px', borderRadius: '9px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: '#F8FAFC', fontSize: '13px', outline: 'none', fontFamily: 'monospace', fontWeight: 700 }} />
+                  <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={handleApplyReferralCode} disabled={applyingCode || !referralCode}
+                    style={{ padding: '9px 18px', borderRadius: '9px', background: '#6366F1', border: 'none', color: '#fff', fontSize: '13px', fontWeight: 600, cursor: 'pointer', opacity: applyingCode ? 0.7 : 1, whiteSpace: 'nowrap' }}>
+                    {applyingCode ? 'Applying...' : 'Apply Code'}
+                  </motion.button>
+                </div>
+              )}
+            </div>
           </div>
         )}
 
