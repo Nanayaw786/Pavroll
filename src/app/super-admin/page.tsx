@@ -200,6 +200,76 @@ function AdminCalculator() {
   )
 }
 
+function LeadSourceChart({ companies }: { companies: any[] }) {
+  const LEAD_LABELS: Record<string, string> = {
+    tiktok: '🎵 TikTok',
+    whatsapp: '📱 WhatsApp',
+    facebook: '👥 Facebook',
+    instagram: '📸 Instagram',
+    linkedin: '💼 LinkedIn',
+    twitter: '🐦 Twitter / X',
+    google: '🔍 Google Search',
+    referral: '🤝 Friend / Colleague',
+    partner: '🏢 Business Agent',
+    accountant: '📊 Accountant',
+    event: '🎪 Event / Conference',
+    other: '💡 Other',
+    direct: '🌐 Direct',
+  }
+
+  const LEAD_COLORS: Record<string, string> = {
+    tiktok: '#EF4444',
+    whatsapp: '#10B981',
+    facebook: '#6366F1',
+    instagram: '#F59E0B',
+    linkedin: '#06B6D4',
+    twitter: '#8B5CF6',
+    google: '#10B981',
+    referral: '#F59E0B',
+    partner: '#EF4444',
+    accountant: '#6366F1',
+    event: '#06B6D4',
+    other: '#94A3B8',
+    direct: '#475569',
+  }
+
+  const counts: Record<string, number> = {}
+  companies.forEach(c => {
+    const source = c.lead_source || 'direct'
+    counts[source] = (counts[source] || 0) + 1
+  })
+
+  const sorted = Object.entries(counts)
+    .sort((a, b) => b[1] - a[1])
+    .map(([key, count]) => ({ key, count, label: LEAD_LABELS[key] || key, color: LEAD_COLORS[key] || '#475569' }))
+
+  const total = companies.length
+
+  return (
+    <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '16px', padding: '20px' }}>
+      <h3 style={{ fontSize: '14px', fontWeight: 600, color: '#F8FAFC', marginBottom: '6px' }}>📣 Where Clients Come From</h3>
+      <p style={{ fontSize: '12px', color: '#475569', marginBottom: '20px' }}>Lead source breakdown across all companies</p>
+      {sorted.length === 0 ? (
+        <p style={{ color: '#475569', fontSize: '13px', textAlign: 'center', padding: '20px 0' }}>No lead source data yet</p>
+      ) : sorted.map((item, i) => (
+        <div key={item.key} style={{ marginBottom: '14px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px', flexWrap: 'wrap', gap: '4px' }}>
+            <span style={{ fontSize: '13px', color: '#F8FAFC', fontWeight: 500 }}>{item.label}</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span style={{ fontSize: '12px', color: '#475569' }}>{Math.round((item.count / total) * 100)}%</span>
+              <span style={{ fontSize: '13px', fontWeight: 700, color: item.color }}>{item.count} {item.count === 1 ? 'company' : 'companies'}</span>
+            </div>
+          </div>
+          <div style={{ height: '6px', borderRadius: '3px', background: 'rgba(255,255,255,0.06)' }}>
+            <motion.div initial={{ width: 0 }} animate={{ width: `${(item.count / total) * 100}%` }} transition={{ delay: i * 0.08, duration: 0.5 }}
+              style={{ height: '100%', borderRadius: '3px', background: item.color }} />
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
 export default function SuperAdminPage() {
   const { user } = useUser()
   const { signOut } = useClerk()
@@ -657,6 +727,9 @@ export default function SuperAdminPage() {
                         ))}
                       </div>
                     </div>
+
+                    {/* Lead Source */}
+                    <LeadSourceChart companies={companies} />
                   </>
                 )}
               </div>
