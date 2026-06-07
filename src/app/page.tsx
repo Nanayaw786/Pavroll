@@ -14,9 +14,42 @@ const features = [
 ]
 
 const plans = [
-  { name: 'Starter', price: 'GHS 120', period: '/mo', employees: 'Up to 10 employees', features: ['Payroll processing', 'PDF payslips', 'Leave management', 'Email support'], color: '#6366F1', popular: false },
-  { name: 'Growth', price: 'GHS 350', period: '/mo', employees: 'Up to 50 employees', features: ['Everything in Starter', 'SSNIT CSV export', 'Email payslips', 'Reports & analytics', 'Priority support'], color: '#10B981', popular: true },
-  { name: 'Business', price: 'GHS 800', period: '/mo', employees: 'Unlimited employees', features: ['Everything in Growth', 'Multi-company', 'Custom branding', 'Dedicated support', 'API access'], color: '#F59E0B', popular: false },
+  { name: 'Starter', price: 'GHS 120', period: '/mo', employees: 'Up to 10 employees', features: [
+    '✅ PAYE & SSNIT calculations',
+    '✅ PDF Payslips',
+    '✅ Employee Management',
+    '✅ Leave Management',
+    '✅ Basic Reports (30 days)',
+    '✅ 50 SMS/month',
+    '✅ 1 Team Member',
+    '❌ Custom Sender ID',
+    '❌ ESS Portal',
+    '❌ Loan Module',
+    '📧 Email Support',
+  ], color: '#6366F1', popular: false },
+  { name: 'Growth', price: 'GHS 350', period: '/mo', employees: 'Up to 50 employees', features: [
+    '✅ Everything in Starter',
+    '✅ Advanced Reports (90 days)',
+    '✅ 200 SMS/month',
+    '✅ Custom Sender ID',
+    '✅ ESS Employee Portal',
+    '✅ 13th Month Bonus',
+    '✅ 3 Team Members',
+    '❌ Loan Module',
+    '❌ API Access',
+    '📧📞 Email + Phone Support',
+  ], color: '#10B981', popular: true },
+  { name: 'Business', price: 'GHS 800', period: '/mo', employees: 'Unlimited employees', features: [
+    '✅ Everything in Growth',
+    '✅ Unlimited SMS',
+    '✅ Unlimited Team Members',
+    '✅ Loan & Salary Advance',
+    '✅ Custom Reports',
+    '✅ Unlimited Audit Trail',
+    '✅ Payroll Variance Alerts',
+    '✅ API Access',
+    '🎯 Dedicated Account Manager',
+  ], color: '#F59E0B', popular: false },
 ]
 
 const stats = [
