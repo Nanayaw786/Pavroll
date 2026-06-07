@@ -14,6 +14,7 @@ import {
 import { supabase } from '@/lib/supabase'
 import { calculatePayroll, DEFAULT_SETTINGS } from '@/lib/payroll'
 import { getAnalyticsSummary } from '@/lib/analytics'
+import { getReferralPartners, getReferrals, createReferralPartner, updateReferralPartner, deleteReferralPartner, generateReferralCode, type ReferralPartner, type Referral } from '@/lib/referrals'
 
 type Company = {
   id: string
@@ -69,6 +70,7 @@ const NAV_ITEMS = [
   { key: 'senderids', label: 'Sender IDs', icon: MessageSquare },
   { key: 'revenue', label: 'Revenue', icon: DollarSign },
   { key: 'system', label: 'System', icon: Server },
+  { key: 'referrals', label: 'Referrals', icon: Star },
   { key: 'support', label: 'Support', icon: Mail },
 ]
 
@@ -214,8 +216,25 @@ export default function SuperAdminPage() {
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [analyticsData, setAnalyticsData] = useState<any>(null)
   const [loadingAnalytics, setLoadingAnalytics] = useState(false)
+  const [partners, setPartners] = useState<ReferralPartner[]>([])
+  const [referrals, setReferrals] = useState<Referral[]>([])
+  const [showPartnerForm, setShowPartnerForm] = useState(false)
+  const [editingPartner, setEditingPartner] = useState<ReferralPartner | null>(null)
+  const [partnerForm, setPartnerForm] = useState({ name: '', email: '', phone: '', code: '', commission_rate: 20, notes: '' })
+  const [savingPartner, setSavingPartner] = useState(false)
 
-  useEffect(() => { loadData(); loadAnalytics() }, [])
+  useEffect(() => { loadData(); loadAnalytics(); loadReferrals() }, [])
+
+  const loadReferrals = async () => {
+    try {
+      const [partnersData, referralsData] = await Promise.all([
+        getReferralPartners(),
+        getReferrals(),
+      ])
+      setPartners(partnersData)
+      setReferrals(referralsData)
+    } catch (err) { console.error(err) }
+  }
 
   const loadAnalytics = async () => {
     setLoadingAnalytics(true)
@@ -263,6 +282,39 @@ export default function SuperAdminPage() {
     await supabase.from('sender_id_requests').update({ status }).eq('id', id)
     setSenderIds(prev => prev.map(s => s.id === id ? { ...s, status } : s))
     setResult({ success: true, message: `Sender ID ${status}!` })
+    setTimeout(() => setResult(null), 3000)
+  }
+
+  const handleSavePartner = async () => {
+    if (!partnerForm.name || !partnerForm.code) return
+    setSavingPartner(true)
+    try {
+      if (editingPartner) {
+        await updateReferralPartner(editingPartner.id, { ...partnerForm, code: partnerForm.code.toUpperCase() })
+        setPartners(prev => prev.map(p => p.id === editingPartner.id ? { ...p, ...partnerForm, code: partnerForm.code.toUpperCase() } : p))
+        setResult({ success: true, message: 'Partner updated successfully!' })
+      } else {
+        const newPartner = await createReferralPartner({ ...partnerForm, code: partnerForm.code.toUpperCase(), is_active: true })
+        setPartners(prev => [newPartner, ...prev])
+        setResult({ success: true, message: `Partner ${partnerForm.name} created! Code: ${partnerForm.code.toUpperCase()}` })
+      }
+      setShowPartnerForm(false)
+      setEditingPartner(null)
+      setPartnerForm({ name: '', email: '', phone: '', code: '', commission_rate: 20, notes: '' })
+      setTimeout(() => setResult(null), 4000)
+    } catch (err) {
+      setResult({ success: false, message: 'Failed to save partner' })
+    } finally {
+      setSavingPartner(false)
+    }
+  }
+
+  const handleDeletePartner = async (id: string, name: string) => {
+    if (!confirm(`Remove ${name} as a partner?`)) return
+    await deleteReferralPartner(id)
+    setPartners(prev => prev.filter(p => p.id !== id))
+    setReferrals(prev => prev.filter(r => r.partner_id !== id))
+    setResult({ success: true, message: `${name} removed as partner.` })
     setTimeout(() => setResult(null), 3000)
   }
 
@@ -1001,6 +1053,205 @@ export default function SuperAdminPage() {
                     </button>
                   </div>
                 </div>
+              </div>
+            )}
+
+            {/* REFERRALS */}
+            {tab === 'referrals' && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+
+                {/* Stats */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px' }}>
+                  {[
+                    { label: 'Total Partners', value: partners.length, color: '#6366F1', icon: Users },
+                    { label: 'Total Referrals', value: referrals.length, color: '#10B981', icon: Star },
+                    { label: 'Active Clients', value: referrals.filter(r => r.status === 'active').length, color: '#F59E0B', icon: CheckCircle },
+                    { label: 'Monthly Commissions', value: `GHS ${referrals.filter(r => r.status === 'active').reduce((s, r) => s + r.commission, 0).toLocaleString()}`, color: '#EF4444', icon: DollarSign },
+                  ].map((s, i) => (
+                    <motion.div key={s.label} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.06 }}
+                      style={{ padding: '16px 18px', borderRadius: '14px', background: `${s.color}08`, border: `1px solid ${s.color}20`, display: 'flex', alignItems: 'center', gap: '12px' }}>
+                      <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: `${s.color}15`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                        <s.icon size={16} color={s.color} />
+                      </div>
+                      <div>
+                        <p style={{ fontSize: '20px', fontWeight: 700, color: s.color }}>{s.value}</p>
+                        <p style={{ fontSize: '11px', color: '#475569' }}>{s.label}</p>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+
+                {/* Partners header */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
+                  <h3 style={{ fontSize: '15px', fontWeight: 700, color: '#F8FAFC' }}>Referral Partners</h3>
+                  <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
+                    onClick={() => { setShowPartnerForm(true); setEditingPartner(null); setPartnerForm({ name: '', email: '', phone: '', code: '', commission_rate: 20, notes: '' }) }}
+                    style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 16px', borderRadius: '9px', background: '#EF4444', border: 'none', color: '#fff', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}>
+                    <Plus size={14} /> Add Partner
+                  </motion.button>
+                </div>
+
+                {/* Partner Form */}
+                <AnimatePresence>
+                  {showPartnerForm && (
+                    <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}
+                      style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: '16px', padding: '20px' }}>
+                      <h4 style={{ fontSize: '14px', fontWeight: 600, color: '#F8FAFC', marginBottom: '16px' }}>
+                        {editingPartner ? 'Edit Partner' : 'New Referral Partner'}
+                      </h4>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                        {[
+                          { label: 'Full Name', key: 'name', placeholder: 'Maxwell Agyei' },
+                          { label: 'Phone', key: 'phone', placeholder: '0244123456' },
+                          { label: 'Email', key: 'email', placeholder: 'maxwell@email.com' },
+                        ].map(field => (
+                          <div key={field.key} style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                            <label style={{ fontSize: '12px', fontWeight: 500, color: '#94A3B8' }}>{field.label}</label>
+                            <input value={(partnerForm as any)[field.key]} onChange={e => setPartnerForm(p => ({ ...p, [field.key]: e.target.value }))}
+                              placeholder={field.placeholder}
+                              style={{ padding: '9px 12px', borderRadius: '8px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: '#F8FAFC', fontSize: '13px', outline: 'none' }} />
+                          </div>
+                        ))}
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                          <label style={{ fontSize: '12px', fontWeight: 500, color: '#94A3B8' }}>Referral Code</label>
+                          <div style={{ display: 'flex', gap: '6px' }}>
+                            <input value={partnerForm.code} onChange={e => setPartnerForm(p => ({ ...p, code: e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '') }))}
+                              placeholder="MAXWELL100"
+                              style={{ flex: 1, padding: '9px 12px', borderRadius: '8px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: '#F8FAFC', fontSize: '13px', outline: 'none', fontFamily: 'monospace', fontWeight: 700 }} />
+                            <button onClick={() => setPartnerForm(p => ({ ...p, code: generateReferralCode(partnerForm.name || 'PARTNER') }))}
+                              style={{ padding: '9px 12px', borderRadius: '8px', background: 'rgba(99,102,241,0.15)', border: '1px solid rgba(99,102,241,0.2)', color: '#818CF8', fontSize: '12px', cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                              Auto
+                            </button>
+                          </div>
+                        </div>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                          <label style={{ fontSize: '12px', fontWeight: 500, color: '#94A3B8' }}>Commission Rate (%)</label>
+                          <input type="number" min="5" max="50" value={partnerForm.commission_rate}
+                            onChange={e => setPartnerForm(p => ({ ...p, commission_rate: parseFloat(e.target.value) || 20 }))}
+                            style={{ padding: '9px 12px', borderRadius: '8px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: '#F8FAFC', fontSize: '13px', outline: 'none' }} />
+                        </div>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', gridColumn: '1 / -1' }}>
+                          <label style={{ fontSize: '12px', fontWeight: 500, color: '#94A3B8' }}>Notes</label>
+                          <input value={partnerForm.notes} onChange={e => setPartnerForm(p => ({ ...p, notes: e.target.value }))}
+                            placeholder="e.g. Business registration agent in Accra"
+                            style={{ padding: '9px 12px', borderRadius: '8px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: '#F8FAFC', fontSize: '13px', outline: 'none' }} />
+                        </div>
+                      </div>
+                      <div style={{ display: 'flex', gap: '10px', marginTop: '16px', justifyContent: 'flex-end' }}>
+                        <button onClick={() => { setShowPartnerForm(false); setEditingPartner(null) }}
+                          style={{ padding: '8px 18px', borderRadius: '8px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: '#94A3B8', fontSize: '13px', cursor: 'pointer' }}>
+                          Cancel
+                        </button>
+                        <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={handleSavePartner} disabled={savingPartner}
+                          style={{ padding: '8px 20px', borderRadius: '8px', background: '#EF4444', border: 'none', color: '#fff', fontSize: '13px', fontWeight: 600, cursor: 'pointer', opacity: savingPartner ? 0.7 : 1 }}>
+                          {savingPartner ? 'Saving...' : editingPartner ? 'Save Changes' : 'Create Partner'}
+                        </motion.button>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
+                {/* Partners List */}
+                {partners.length === 0 ? (
+                  <div style={{ padding: '48px', textAlign: 'center', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '16px' }}>
+                    <Star size={36} color="#475569" style={{ margin: '0 auto 12px' }} />
+                    <p style={{ color: '#F8FAFC', fontSize: '14px', fontWeight: 600, marginBottom: '6px' }}>No Partners Yet</p>
+                    <p style={{ color: '#475569', fontSize: '12px' }}>Add your first referral partner to start tracking commissions</p>
+                  </div>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                    {partners.map((partner, i) => {
+                      const partnerReferrals = referrals.filter(r => r.partner_id === partner.id)
+                      const activeReferrals = partnerReferrals.filter(r => r.status === 'active')
+                      const monthlyCommission = activeReferrals.reduce((s, r) => s + r.commission, 0)
+                      return (
+                        <motion.div key={partner.id} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.06 }}
+                          style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '16px', padding: '20px' }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '12px', marginBottom: '16px' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                              <div style={{ width: '44px', height: '44px', borderRadius: '12px', background: 'rgba(239,68,68,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '16px', fontWeight: 800, color: '#EF4444', flexShrink: 0 }}>
+                                {partner.name.charAt(0)}
+                              </div>
+                              <div>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                                  <h3 style={{ fontSize: '15px', fontWeight: 700, color: '#F8FAFC' }}>{partner.name}</h3>
+                                  <span style={{ fontSize: '12px', fontWeight: 800, padding: '3px 10px', borderRadius: '6px', background: 'rgba(99,102,241,0.15)', color: '#818CF8', fontFamily: 'monospace' }}>
+                                    {partner.code}
+                                  </span>
+                                  {!partner.is_active && (
+                                    <span style={{ fontSize: '10px', padding: '2px 8px', borderRadius: '999px', background: 'rgba(239,68,68,0.15)', color: '#EF4444' }}>Inactive</span>
+                                  )}
+                                </div>
+                                <p style={{ fontSize: '12px', color: '#475569', marginTop: '2px' }}>{partner.phone} {partner.email && `• ${partner.email}`}</p>
+                                {partner.notes && <p style={{ fontSize: '11px', color: '#334155', marginTop: '2px' }}>{partner.notes}</p>}
+                              </div>
+                            </div>
+                            <div style={{ display: 'flex', gap: '6px' }}>
+                              <button onClick={() => {
+                                setEditingPartner(partner)
+                                setPartnerForm({ name: partner.name, email: partner.email, phone: partner.phone, code: partner.code, commission_rate: partner.commission_rate, notes: partner.notes })
+                                setShowPartnerForm(true)
+                              }}
+                                style={{ padding: '6px 12px', borderRadius: '8px', background: 'rgba(99,102,241,0.1)', border: '1px solid rgba(99,102,241,0.2)', color: '#818CF8', fontSize: '12px', cursor: 'pointer', fontWeight: 500 }}>
+                                Edit
+                              </button>
+                              <button onClick={() => handleDeletePartner(partner.id, partner.name)}
+                                style={{ padding: '6px 12px', borderRadius: '8px', background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)', color: '#EF4444', fontSize: '12px', cursor: 'pointer', fontWeight: 500 }}>
+                                Remove
+                              </button>
+                            </div>
+                          </div>
+
+                          {/* Partner stats */}
+                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '10px', marginBottom: '16px' }}>
+                            {[
+                              { label: 'Total Referrals', value: partnerReferrals.length, color: '#6366F1' },
+                              { label: 'Active Clients', value: activeReferrals.length, color: '#10B981' },
+                              { label: 'Commission Rate', value: `${partner.commission_rate}%`, color: '#F59E0B' },
+                              { label: 'Monthly Earnings', value: `GHS ${monthlyCommission.toLocaleString()}`, color: '#EF4444' },
+                            ].map(stat => (
+                              <div key={stat.label} style={{ padding: '10px 12px', borderRadius: '10px', background: `${stat.color}08`, border: `1px solid ${stat.color}15`, textAlign: 'center' }}>
+                                <p style={{ fontSize: '16px', fontWeight: 700, color: stat.color }}>{stat.value}</p>
+                                <p style={{ fontSize: '10px', color: '#475569', marginTop: '2px' }}>{stat.label}</p>
+                              </div>
+                            ))}
+                          </div>
+
+                          {/* Referrals list */}
+                          {partnerReferrals.length > 0 && (
+                            <div style={{ background: 'rgba(0,0,0,0.2)', borderRadius: '10px', overflow: 'hidden' }}>
+                              <div style={{ padding: '8px 14px', background: 'rgba(255,255,255,0.02)', display: 'grid', gridTemplateColumns: '1fr 80px 80px 80px' }}>
+                                {['Company', 'Plan', 'Commission', 'Status'].map(h => (
+                                  <span key={h} style={{ fontSize: '10px', color: '#475569', fontWeight: 600, textTransform: 'uppercase' }}>{h}</span>
+                                ))}
+                              </div>
+                              {partnerReferrals.map(ref => (
+                                <div key={ref.id} style={{ padding: '10px 14px', borderTop: '1px solid rgba(255,255,255,0.04)', display: 'grid', gridTemplateColumns: '1fr 80px 80px 80px', alignItems: 'center' }}>
+                                  <span style={{ fontSize: '12px', color: '#F8FAFC', fontWeight: 500 }}>{ref.company_name}</span>
+                                  <span style={{ fontSize: '11px', color: '#94A3B8', textTransform: 'capitalize' }}>{ref.plan}</span>
+                                  <span style={{ fontSize: '11px', color: '#10B981', fontWeight: 600 }}>GHS {ref.commission}</span>
+                                  <span style={{ fontSize: '10px', fontWeight: 600, padding: '2px 8px', borderRadius: '999px', width: 'fit-content',
+                                    background: ref.status === 'active' ? 'rgba(16,185,129,0.1)' : ref.status === 'cancelled' ? 'rgba(239,68,68,0.1)' : 'rgba(245,158,11,0.1)',
+                                    color: ref.status === 'active' ? '#10B981' : ref.status === 'cancelled' ? '#EF4444' : '#F59E0B' }}>
+                                    {ref.status}
+                                  </span>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+
+                          {/* Share info */}
+                          <div style={{ marginTop: '14px', padding: '12px 14px', borderRadius: '10px', background: 'rgba(99,102,241,0.06)', border: '1px solid rgba(99,102,241,0.15)' }}>
+                            <p style={{ fontSize: '12px', color: '#818CF8', fontWeight: 600, marginBottom: '4px' }}>📱 Share with {partner.name}</p>
+                            <p style={{ fontSize: '11px', color: '#64748B', lineHeight: 1.6 }}>
+                              "Sign up at pavroll-nwvm.vercel.app and enter referral code <strong style={{ color: '#F8FAFC', fontFamily: 'monospace' }}>{partner.code}</strong> to get started. I earn {partner.commission_rate}% commission on your subscription."
+                            </p>
+                          </div>
+                        </motion.div>
+                      )
+                    })}
+                  </div>
+                )}
               </div>
             )}
 
