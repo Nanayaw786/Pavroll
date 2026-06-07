@@ -5,7 +5,7 @@ import './globals.css'
 
 export const metadata: Metadata = {
   title: 'Pavroll — Ghana HR & Payroll',
-  description: 'Ghana GRA 2024 compliant payroll for SMEs. Auto-calculate PAYE, SSNIT & Tier 2.',
+  description: 'Ghana GRA 2026 compliant payroll for SMEs. Auto-calculate PAYE, SSNIT & Tier 2.',
   manifest: '/manifest.json',
   themeColor: '#6366F1',
   appleWebApp: {

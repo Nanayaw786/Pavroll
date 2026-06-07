@@ -6,7 +6,7 @@ import PayrollOrb from '@/components/ui/PayrollOrb'
 
 const features = [
   { icon: Users, title: 'Employee Management', desc: 'Add, edit and manage your entire workforce with SSNIT numbers, bank details and salary info in one place.', color: '#6366F1' },
-  { icon: Zap, title: 'Auto Payroll Calculation', desc: 'Ghana GRA 2024 compliant. Auto-calculates PAYE, SSNIT (5.5%), Tier 2 and net pay every month.', color: '#10B981' },
+  { icon: Zap, title: 'Auto Payroll Calculation', desc: 'Ghana GRA 2026 compliant. Auto-calculates PAYE, SSNIT (5.5%), Tier 2 and net pay every month.', color: '#10B981' },
   { icon: FileText, title: 'PDF Payslips', desc: 'Generate branded payslips instantly and email them directly to every employee with one click.', color: '#F59E0B' },
   { icon: BarChart3, title: 'Reports & Exports', desc: 'Export SSNIT schedules, PAYE reports and payroll summaries as CSV. Ready for GRA submission.', color: '#06B6D4' },
   { icon: Shield, title: 'Leave Management', desc: 'Handle leave requests, approvals and balances. Track annual, sick, maternity and emergency leave.', color: '#8B5CF6' },
@@ -98,7 +98,7 @@ export default function LandingPage() {
             <span style={{ background: 'linear-gradient(135deg,#818CF8,#6366F1)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>just works.</span>
           </h1>
           <p style={{ fontSize: '17px', color: '#64748B', lineHeight: 1.7, marginBottom: '36px', maxWidth: '480px' }}>
-            Ghana GRA 2024 compliant payroll for SMEs. Auto-calculate PAYE, SSNIT & Tier 2. Generate payslips. Export SSNIT schedules. All in one beautiful tool.
+            Ghana GRA 2026 compliant payroll for SMEs. Auto-calculate PAYE, SSNIT & Tier 2. Generate payslips. Export SSNIT schedules. All in one beautiful tool.
           </p>
           <div style={{ display: 'flex', gap: '14px', alignItems: 'center' }}>
             <Link href="/dashboard">
@@ -110,7 +110,7 @@ export default function LandingPage() {
             <p style={{ fontSize: '13px', color: '#475569' }}>No credit card required</p>
           </div>
           <div style={{ display: 'flex', gap: '24px', marginTop: '40px' }}>
-            {['GRA 2024 Compliant', 'SSNIT Export', 'PDF Payslips'].map(tag => (
+            {['GRA 2026 Compliant', 'SSNIT Export', 'PDF Payslips'].map(tag => (
               <div key={tag} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <CheckCircle size={14} color="#10B981" />
                 <span style={{ fontSize: '13px', color: '#64748B' }}>{tag}</span>

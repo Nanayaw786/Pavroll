@@ -5,7 +5,7 @@ import { Zap, CheckCircle, ArrowRight, Mail, Phone, MapPin, Star, Shield, Trendi
 import { useState } from 'react'
 
 const features = [
-  { icon: TrendingUp, title: 'Ghana GRA 2024 Compliant', desc: 'Auto-calculates PAYE, SSNIT (5.5%), Tier 2 pension and net pay — always up to date with GRA regulations.', color: '#6366F1' },
+  { icon: TrendingUp, title: 'Ghana GRA 2026 Compliant', desc: 'Auto-calculates PAYE, SSNIT (5.5%), Tier 2 pension and net pay — always up to date with GRA regulations.', color: '#6366F1' },
   { icon: FileText, title: 'PDF Payslips', desc: 'Generate branded payslips instantly and email them directly to every employee with one click.', color: '#10B981' },
   { icon: Users, title: 'Employee Management', desc: 'Add, edit and manage your entire workforce with SSNIT numbers, bank details and salary info in one place.', color: '#F59E0B' },
   { icon: Bell, title: 'Compliance Alerts', desc: 'Never miss a SSNIT or PAYE deadline again. Pavroll alerts you days before every filing deadline.', color: '#06B6D4' },
@@ -16,7 +16,7 @@ const features = [
 const testimonials = [
   { name: 'Abena Osei', role: 'HR Manager', company: 'TechGhana Ltd', text: 'Pavroll saved us 3 days every month. SSNIT calculations used to take forever. Now it\'s done in seconds.', rating: 5, avatar: 'AO' },
   { name: 'Kweku Darko', role: 'Finance Director', company: 'Accra Foods Co.', text: 'The audit trail alone is worth the subscription. Our external auditors were impressed by the level of detail.', rating: 5, avatar: 'KD' },
-  { name: 'Ama Sarpong', role: 'CEO', company: 'Sarpong Ventures', text: 'Finally a payroll tool built for Ghana. The PAYE calculations are spot on with GRA 2024 rates.', rating: 5, avatar: 'AS' },
+  { name: 'Ama Sarpong', role: 'CEO', company: 'Sarpong Ventures', text: 'Finally a payroll tool built for Ghana. The PAYE calculations are spot on with GRA 2026 rates.', rating: 5, avatar: 'AS' },
   { name: 'Kofi Mensah', role: 'Accountant', company: 'MensahCorp', text: 'I manage payroll for 3 companies. Pavroll\'s multi-company support is a game changer for me.', rating: 5, avatar: 'KM' },
 ]
 
@@ -33,7 +33,7 @@ const stats = [
 ]
 
 const whyGhana = [
-  { title: 'Built for GRA 2024', desc: 'PAYE tax bands, SSNIT contributions, Tier 2 pension — all hardcoded to Ghana\'s exact regulations. Not a generic tool adapted for Ghana.' },
+  { title: 'Built for GRA 2026', desc: 'PAYE tax bands, SSNIT contributions, Tier 2 pension — all hardcoded to Ghana\'s exact regulations. Not a generic tool adapted for Ghana.' },
   { title: 'Priced in GHS', desc: 'Starting at GHS 120/month. No USD billing, no hidden forex charges. Transparent pricing for Ghanaian businesses.' },
   { title: 'SSNIT Schedule Export', desc: 'Generate SSNIT contribution schedules ready for submission. One click CSV export that accountants love.' },
   { title: 'Ghana Card Integration', desc: 'Store Ghana Card numbers alongside SSNIT numbers, bank details and employment contracts in one place.' },
@@ -115,7 +115,7 @@ export default function AboutPage() {
             <p style={{ fontSize: '16px', color: '#64748B', lineHeight: 1.8, marginBottom: '28px' }}>
               We believe no business should lose money to payroll errors, miss SSNIT deadlines, or spend 3 days every month calculating PAYE manually. That time belongs to growing your business.
             </p>
-            {['GRA 2024 compliant always', 'Never miss a statutory deadline', 'Save 3+ days every month', 'Built for Ghanaian SMEs'].map(item => (
+            {['GRA 2026 compliant always', 'Never miss a statutory deadline', 'Save 3+ days every month', 'Built for Ghanaian SMEs'].map(item => (
               <div key={item} style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
                 <CheckCircle size={16} color="#10B981" />
                 <span style={{ fontSize: '14px', color: '#94A3B8' }}>{item}</span>
