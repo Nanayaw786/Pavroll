@@ -8,7 +8,7 @@ import { useCompanyFeatures } from '@/hooks/useCompanyFeatures'
 import {
   LayoutDashboard, Users, CreditCard, FileText,
   Calendar, BarChart3, Settings, LogOut, Zap,
-  Shield, UserX, Menu, X, MessageSquare, UsersRound
+  Shield, UserX, Menu, X, MessageSquare, UsersRound, Calculator
 } from 'lucide-react'
 
 
@@ -26,6 +26,7 @@ function SidebarContent({ onClose }: { onClose?: () => void }) {
     { href: '/payslips', icon: FileText, label: 'Payslips', show: true },
     { href: '/leave', icon: Calendar, label: 'Leave', show: true },
     { href: '/reports', icon: BarChart3, label: 'Reports', show: true },
+    { href: '/calculator', icon: Calculator, label: 'Calculator', show: true },
     { href: '/audit', icon: Shield, label: 'Audit Trail', show: true },
     { href: '/offboarding', icon: UserX, label: 'Offboarding', show: features.offboarding },
     { href: '/sms', icon: MessageSquare, label: 'Bulk SMS', show: features.bulk_sms },
