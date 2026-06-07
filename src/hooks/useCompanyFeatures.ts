@@ -4,26 +4,42 @@ import { supabase } from '@/lib/supabase'
 import { getCompanyId } from '@/lib/employees'
 
 export type CompanyFeatures = {
+  // Core premium features (ON by default)
+  payslips: boolean
+  leave: boolean
+  reports: boolean
+  audit_trail: boolean
+  offboarding: boolean
+  bulk_sms: boolean
+  calculator: boolean
+  team: boolean
+  ess_portal: boolean
+  sender_id: boolean
+  // Advanced features (OFF by default)
   loan_module: boolean
   bonus_payroll: boolean
   variance_alerts: boolean
   custom_reports: boolean
-  bulk_sms: boolean
-  ess_portal: boolean
-  offboarding: boolean
-  sender_id: boolean
   multi_currency: boolean
 }
 
-const DEFAULT_FEATURES: CompanyFeatures = {
+export const DEFAULT_FEATURES: CompanyFeatures = {
+  // Core premium — ON by default
+  payslips: true,
+  leave: true,
+  reports: true,
+  audit_trail: true,
+  offboarding: true,
+  bulk_sms: true,
+  calculator: true,
+  team: true,
+  ess_portal: true,
+  sender_id: true,
+  // Advanced — OFF by default
   loan_module: false,
   bonus_payroll: false,
   variance_alerts: false,
   custom_reports: false,
-  bulk_sms: true,
-  ess_portal: true,
-  offboarding: true,
-  sender_id: true,
   multi_currency: false,
 }
 

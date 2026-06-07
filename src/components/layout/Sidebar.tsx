@@ -20,17 +20,20 @@ function SidebarContent({ onClose }: { onClose?: () => void }) {
   const { features } = useCompanyFeatures()
 
   const navItems = [
+    // Always visible — core features
     { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard', show: true },
     { href: '/employees', icon: Users, label: 'Employees', show: true },
     { href: '/payroll', icon: CreditCard, label: 'Payroll', show: true },
-    { href: '/payslips', icon: FileText, label: 'Payslips', show: true },
-    { href: '/leave', icon: Calendar, label: 'Leave', show: true },
-    { href: '/reports', icon: BarChart3, label: 'Reports', show: true },
-    { href: '/calculator', icon: Calculator, label: 'Calculator', show: true },
-    { href: '/audit', icon: Shield, label: 'Audit Trail', show: true },
-    { href: '/offboarding', icon: UserX, label: 'Offboarding', show: features.offboarding },
-    { href: '/sms', icon: MessageSquare, label: 'Bulk SMS', show: features.bulk_sms },
-    { href: '/team', icon: UsersRound, label: 'Team', show: true },
+    // Feature flag controlled
+    { href: '/payslips', icon: FileText, label: 'Payslips', show: features.payslips !== false },
+    { href: '/leave', icon: Calendar, label: 'Leave', show: features.leave !== false },
+    { href: '/reports', icon: BarChart3, label: 'Reports', show: features.reports !== false },
+    { href: '/calculator', icon: Calculator, label: 'Calculator', show: features.calculator !== false },
+    { href: '/audit', icon: Shield, label: 'Audit Trail', show: features.audit_trail !== false },
+    { href: '/offboarding', icon: UserX, label: 'Offboarding', show: features.offboarding !== false },
+    { href: '/sms', icon: MessageSquare, label: 'Bulk SMS', show: features.bulk_sms !== false },
+    { href: '/team', icon: UsersRound, label: 'Team', show: features.team !== false },
+    // Always visible — settings
     { href: '/settings', icon: Settings, label: 'Settings', show: true },
   ].filter(item => item.show)
 

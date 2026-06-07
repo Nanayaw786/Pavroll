@@ -28,15 +28,23 @@ type Company = {
 }
 
 const FEATURE_LIST = [
-  { key: 'loan_module', label: 'Loan & Salary Advance', desc: 'Employee loan management' },
-  { key: 'bonus_payroll', label: '13th Month / Bonus', desc: 'Bonus payroll processing' },
-  { key: 'variance_alerts', label: 'Payroll Variance Alerts', desc: 'Detect unusual payroll changes' },
-  { key: 'custom_reports', label: 'Custom Reports', desc: 'Advanced reporting module' },
-  { key: 'bulk_sms', label: 'Bulk SMS', desc: 'SMS notifications' },
-  { key: 'ess_portal', label: 'ESS Portal', desc: 'Employee self-service' },
-  { key: 'offboarding', label: 'Offboarding Module', desc: 'Employee exit management' },
-  { key: 'sender_id', label: 'Custom Sender ID', desc: 'Branded SMS sender' },
-  { key: 'multi_currency', label: 'Multi Currency', desc: 'USD, EUR support' },
+  // Core Premium Features (ON by default)
+  { key: 'payslips', label: 'Payslips', desc: 'PDF payslip generation and email delivery', default: true },
+  { key: 'leave', label: 'Leave Management', desc: 'Leave requests, approvals and balances', default: true },
+  { key: 'reports', label: 'Reports', desc: 'Payroll reports and CSV export', default: true },
+  { key: 'audit_trail', label: 'Audit Trail', desc: 'Complete action history and compliance logs', default: true },
+  { key: 'offboarding', label: 'Offboarding Module', desc: 'Employee exit, gratuity and clearance', default: true },
+  { key: 'bulk_sms', label: 'Bulk SMS', desc: 'SMS notifications to employees', default: true },
+  { key: 'calculator', label: 'Payroll Calculator', desc: 'PAYE, SSNIT, Net Pay calculator', default: true },
+  { key: 'team', label: 'Team Management', desc: 'Multi-user roles and permissions', default: true },
+  { key: 'ess_portal', label: 'ESS Portal', desc: 'Employee self-service portal', default: true },
+  { key: 'sender_id', label: 'Custom Sender ID', desc: 'Branded SMS sender name', default: true },
+  // Advanced Features (OFF by default)
+  { key: 'loan_module', label: 'Loan & Salary Advance', desc: 'Employee loan management and deductions', default: false },
+  { key: 'bonus_payroll', label: '13th Month / Bonus Payroll', desc: 'Bonus and 13th month processing', default: false },
+  { key: 'variance_alerts', label: 'Payroll Variance Alerts', desc: 'Detect unusual payroll changes automatically', default: false },
+  { key: 'custom_reports', label: 'Custom Reports', desc: 'Advanced custom reporting module', default: false },
+  { key: 'multi_currency', label: 'Multi Currency', desc: 'USD, EUR and other currency support', default: false },
 ]
 
 const PLAN_COLORS: Record<string, string> = {
