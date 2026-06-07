@@ -2,9 +2,10 @@
 import DashboardLayout from '@/components/layout/DashboardLayout'
 import { motion } from 'framer-motion'
 import { useState, useEffect } from 'react'
-import { calculatePayroll } from '@/lib/payroll'
+import { calculatePayroll, DEFAULT_SETTINGS, type PayrollSettings } from '@/lib/payroll'
 import { runPayroll, getPayrollRuns, getPayrollItems, type PayrollRun, type PayrollItem } from '@/lib/payrollDb'
 import { getEmployees, getCompanyId, type Employee } from '@/lib/employees'
+import { supabase } from '@/lib/supabase'
 import { Play, CheckCircle, Download, ChevronDown, ChevronUp, Loader2 } from 'lucide-react'
 
 const months = ['January','February','March','April','May','June','July','August','September','October','November','December']
@@ -20,6 +21,7 @@ const fmt = (n: number) => `GHS ${n.toLocaleString('en-GH', { minimumFractionDig
 
 export default function PayrollPage() {
   const [companyId, setCompanyId] = useState('')
+  const [payrollSettings, setPayrollSettings] = useState<PayrollSettings>(DEFAULT_SETTINGS)
   const [employees, setEmployees] = useState<Employee[]>([])
   const [payrollRuns, setPayrollRuns] = useState<PayrollRun[]>([])
   const [currentRun, setCurrentRun] = useState<PayrollRun | null>(null)
@@ -37,6 +39,10 @@ export default function PayrollPage() {
       setLoading(true)
       const cId = await getCompanyId()
       setCompanyId(cId)
+      const { data: companyData } = await supabase.from('companies').select('payroll_settings').eq('id', cId).single()
+      if (companyData?.payroll_settings) {
+        setPayrollSettings(prev => ({ ...prev, ...companyData.payroll_settings }))
+      }
       const [emps, runs] = await Promise.all([
         getEmployees(cId),
         getPayrollRuns(cId)
@@ -104,7 +110,7 @@ export default function PayrollPage() {
 
   // Use real items if run exists, otherwise calculate from employees
   const displayItems = currentRun ? items : employees.map(emp => {
-    const result = calculatePayroll(emp.basic_salary)
+    const result = calculatePayroll(emp.basic_salary, payrollSettings)
     return {
       id: emp.id,
       payroll_run_id: '',

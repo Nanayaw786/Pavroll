@@ -32,6 +32,29 @@ export default function SettingsPage() {
   const [result, setResult] = useState<{ success: boolean, message: string } | null>(null)
   const [companyForm, setCompanyForm] = useState({ name: '', email: '', phone: '', address: '', tin: '', ssnit_employer_code: '' })
   const [payingPlan, setPayingPlan] = useState<string | null>(null)
+  const [payrollSettings, setPayrollSettings] = useState({
+    ssnit_employee_rate: 5.5,
+    ssnit_employer_rate: 13.0,
+    tier2_employer_rate: 5.0,
+    use_custom_paye: false,
+    custom_paye_rate: 0,
+    overtime_rate: 1.5,
+    currency: 'GHS',
+  })
+  const [savingPayroll, setSavingPayroll] = useState(false)
+
+  const handleSavePayrollSettings = async () => {
+    setSavingPayroll(true)
+    try {
+      await supabase.from('companies').update({ payroll_settings: payrollSettings }).eq('id', companyId)
+      setResult({ success: true, message: 'Payroll settings saved! New rates apply on next payroll run.' })
+      setTimeout(() => setResult(null), 4000)
+    } catch (err) {
+      setResult({ success: false, message: 'Failed to save payroll settings' })
+    } finally {
+      setSavingPayroll(false)
+    }
+  }
 
   const handlePaystack = (planKey: string, amount: number, planName: string) => {
     if (typeof window === 'undefined') return
@@ -68,6 +91,9 @@ export default function SettingsPage() {
           tin: companyData.tin || '',
           ssnit_employer_code: companyData.ssnit_employer_code || '',
         })
+        if (companyData.payroll_settings) {
+          setPayrollSettings(prev => ({ ...prev, ...companyData.payroll_settings }))
+        }
       }
       const reqs = await getSenderIdRequests(cId)
       setRequests(reqs)
@@ -140,6 +166,7 @@ export default function SettingsPage() {
         <div className="settings-tabs" style={{ display: 'flex', gap: '4px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '10px', padding: '4px', width: 'fit-content', flexWrap: 'wrap' }}>
           {([
             { key: 'general', label: 'Company', icon: Building2 },
+            { key: 'payroll', label: 'Payroll Rates', icon: CreditCard },
             { key: 'senderid', label: 'SMS Sender ID', icon: MessageSquare },
             { key: 'billing', label: 'Billing', icon: Settings },
             { key: 'notifications', label: 'Notifications', icon: Bell },
@@ -306,6 +333,122 @@ export default function SettingsPage() {
                 })
               )}
             </div>
+          </div>
+        )}
+
+        {/* Payroll Rates Tab */}
+        {tab === 'payroll' && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', maxWidth: '640px' }}>
+
+            {/* Info banner */}
+            <div style={{ padding: '16px 20px', borderRadius: '12px', background: 'rgba(99,102,241,0.06)', border: '1px solid rgba(99,102,241,0.15)' }}>
+              <p style={{ fontSize: '13px', fontWeight: 600, color: '#818CF8', marginBottom: '4px' }}>⚙️ Custom Payroll Rates</p>
+              <p style={{ fontSize: '12px', color: '#64748B', lineHeight: 1.6 }}>
+                By default Pavroll uses Ghana GRA 2026 standard rates. You can customize SSNIT and PAYE rates here if your company has negotiated different rates or special exemptions.
+              </p>
+            </div>
+
+            {/* SSNIT Rates */}
+            <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '16px', padding: '24px' }}>
+              <h3 style={{ fontSize: '15px', fontWeight: 700, color: '#F8FAFC', marginBottom: '4px' }}>SSNIT Contribution Rates</h3>
+              <p style={{ fontSize: '12px', color: '#475569', marginBottom: '20px' }}>Standard: Employee 5.5% | Employer 13% | Tier 2 5%</p>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '14px' }}>
+                {[
+                  { label: 'Employee Rate (%)', key: 'ssnit_employee_rate', desc: 'Deducted from employee salary', standard: '5.5%' },
+                  { label: 'Employer Rate (%)', key: 'ssnit_employer_rate', desc: 'Paid by company on top', standard: '13%' },
+                  { label: 'Tier 2 Rate (%)', key: 'tier2_employer_rate', desc: 'Occupational pension', standard: '5%' },
+                ].map(field => (
+                  <div key={field.key} style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                    <label style={{ fontSize: '12px', fontWeight: 500, color: '#94A3B8' }}>{field.label}</label>
+                    <input
+                      type="number"
+                      min="0"
+                      max="100"
+                      step="0.1"
+                      value={(payrollSettings as any)[field.key]}
+                      onChange={e => setPayrollSettings(p => ({ ...p, [field.key]: parseFloat(e.target.value) || 0 }))}
+                      style={{ padding: '10px 14px', borderRadius: '10px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: '#F8FAFC', fontSize: '13px', outline: 'none' }}
+                    />
+                    <p style={{ fontSize: '11px', color: '#475569' }}>Standard: {field.standard}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* PAYE Settings */}
+            <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '16px', padding: '24px' }}>
+              <h3 style={{ fontSize: '15px', fontWeight: 700, color: '#F8FAFC', marginBottom: '4px' }}>PAYE Settings</h3>
+              <p style={{ fontSize: '12px', color: '#475569', marginBottom: '20px' }}>Standard: GRA 2026 progressive bands (0% - 35%)</p>
+
+              {/* Toggle custom PAYE */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px', borderRadius: '12px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', marginBottom: '16px' }}>
+                <div>
+                  <p style={{ fontSize: '13px', fontWeight: 600, color: '#F8FAFC' }}>Use Custom Flat PAYE Rate</p>
+                  <p style={{ fontSize: '12px', color: '#475569', marginTop: '2px' }}>Override GRA progressive bands with a single flat rate</p>
+                </div>
+                <motion.button whileHover={{ scale: 1.05 }}
+                  onClick={() => setPayrollSettings(p => ({ ...p, use_custom_paye: !p.use_custom_paye }))}
+                  style={{ width: '44px', height: '24px', borderRadius: '12px', border: 'none', cursor: 'pointer', position: 'relative', background: payrollSettings.use_custom_paye ? '#6366F1' : 'rgba(255,255,255,0.1)', flexShrink: 0 }}>
+                  <div style={{ position: 'absolute', top: '2px', left: payrollSettings.use_custom_paye ? '22px' : '2px', width: '20px', height: '20px', borderRadius: '50%', background: '#fff', transition: 'left 0.2s' }} />
+                </motion.button>
+              </div>
+
+              {payrollSettings.use_custom_paye && (
+                <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                  <label style={{ fontSize: '12px', fontWeight: 500, color: '#94A3B8' }}>Custom PAYE Rate (%)</label>
+                  <input
+                    type="number" min="0" max="50" step="0.5"
+                    value={payrollSettings.custom_paye_rate}
+                    onChange={e => setPayrollSettings(p => ({ ...p, custom_paye_rate: parseFloat(e.target.value) || 0 }))}
+                    placeholder="e.g. 10"
+                    style={{ padding: '10px 14px', borderRadius: '10px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(99,102,241,0.3)', color: '#F8FAFC', fontSize: '13px', outline: 'none', maxWidth: '200px' }}
+                  />
+                  <p style={{ fontSize: '11px', color: '#F59E0B' }}>⚠️ Only use this if your company has a special tax arrangement with GRA</p>
+                </motion.div>
+              )}
+
+              {!payrollSettings.use_custom_paye && (
+                <div style={{ padding: '12px 14px', borderRadius: '10px', background: 'rgba(16,185,129,0.06)', border: '1px solid rgba(16,185,129,0.15)' }}>
+                  <p style={{ fontSize: '12px', color: '#10B981', fontWeight: 600, marginBottom: '8px' }}>✅ Using GRA 2026 Standard Bands</p>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                    {[
+                      'First GHS 5,880/year → 0%',
+                      'Next GHS 1,320/year → 5%',
+                      'Next GHS 1,560/year → 10%',
+                      'Next GHS 38,000/year → 17.5%',
+                      'Next GHS 192,000/year → 25%',
+                      'Next GHS 366,240/year → 30%',
+                      'Above GHS 605,000/year → 35%',
+                    ].map(band => (
+                      <p key={band} style={{ fontSize: '11px', color: '#475569' }}>• {band}</p>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Overtime Rate */}
+            <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '16px', padding: '24px' }}>
+              <h3 style={{ fontSize: '15px', fontWeight: 700, color: '#F8FAFC', marginBottom: '4px' }}>Overtime Rate</h3>
+              <p style={{ fontSize: '12px', color: '#475569', marginBottom: '16px' }}>Multiplier applied to basic hourly rate for overtime hours</p>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <input
+                  type="number" min="1" max="3" step="0.5"
+                  value={payrollSettings.overtime_rate}
+                  onChange={e => setPayrollSettings(p => ({ ...p, overtime_rate: parseFloat(e.target.value) || 1.5 }))}
+                  style={{ padding: '10px 14px', borderRadius: '10px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: '#F8FAFC', fontSize: '13px', outline: 'none', width: '120px' }}
+                />
+                <span style={{ fontSize: '13px', color: '#475569' }}>× basic hourly rate (Standard: 1.5x)</span>
+              </div>
+            </div>
+
+            {/* Save button */}
+            <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
+              onClick={handleSavePayrollSettings} disabled={savingPayroll}
+              style={{ padding: '12px 24px', borderRadius: '10px', background: '#6366F1', border: 'none', color: '#fff', fontSize: '14px', fontWeight: 600, cursor: 'pointer', opacity: savingPayroll ? 0.7 : 1, width: 'fit-content' }}>
+              {savingPayroll ? 'Saving...' : '💾 Save Payroll Settings'}
+            </motion.button>
           </div>
         )}
 
