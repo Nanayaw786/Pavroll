@@ -1,67 +1,62 @@
-// Ghana GRA 2024 Payroll Calculation Engine
+// Ghana GRA 2026 PAYE & SSNIT Calculator
+// Updated: June 2026
+// Source: Ghana Revenue Authority (GRA) & SSNIT
 
 export type PayrollResult = {
   basicSalary: number
   grossSalary: number
   ssnitEmployee: number
   ssnitEmployer: number
-  tier2Employee: number
   tier2Employer: number
-  taxableIncome: number
   paye: number
   totalDeductions: number
   netPay: number
+  effectiveTaxRate: number
 }
 
-export function calculatePAYE(annualTaxable: number): number {
-  const bands = [
-    { limit: 4380, rate: 0 },
-    { limit: 1320, rate: 0.05 },
-    { limit: 1560, rate: 0.10 },
-    { limit: 38000, rate: 0.175 },
-    { limit: 192000, rate: 0.25 },
-    { limit: Infinity, rate: 0.35 },
-  ]
+const SSNIT_EMPLOYEE_RATE = 0.055
+const SSNIT_EMPLOYER_RATE = 0.13
+const TIER2_EMPLOYER_RATE = 0.05
+const SSNIT_CEILING = 69000
+
+const PAYE_BANDS = [
+  { limit: 5880,    rate: 0.00  },
+  { limit: 1320,    rate: 0.05  },
+  { limit: 1560,    rate: 0.10  },
+  { limit: 38000,   rate: 0.175 },
+  { limit: 192000,  rate: 0.25  },
+  { limit: 366240,  rate: 0.30  },
+  { limit: Infinity, rate: 0.35 },
+]
+
+export function calculatePAYE(annualTaxableIncome: number): number {
   let tax = 0
-  let remaining = annualTaxable
-  for (const band of bands) {
+  let remaining = annualTaxableIncome
+  for (const band of PAYE_BANDS) {
     if (remaining <= 0) break
     const taxable = Math.min(remaining, band.limit)
     tax += taxable * band.rate
     remaining -= taxable
   }
-  return tax / 12 // monthly
+  return Math.max(0, tax)
 }
 
-export function calculatePayroll(basicSalary: number, allowances = 0): PayrollResult {
-  const grossSalary = basicSalary + allowances
+export function calculatePayroll(basicSalary: number): PayrollResult {
+  const insurableSalary = Math.min(basicSalary, SSNIT_CEILING)
+  const ssnitEmployee = Math.round(insurableSalary * SSNIT_EMPLOYEE_RATE * 100) / 100
+  const ssnitEmployer = Math.round(insurableSalary * SSNIT_EMPLOYER_RATE * 100) / 100
+  const tier2Employer = Math.round(insurableSalary * TIER2_EMPLOYER_RATE * 100) / 100
+  const grossSalary = basicSalary
+  const monthlyTaxableIncome = grossSalary - ssnitEmployee
+  const annualTaxableIncome = monthlyTaxableIncome * 12
+  const annualPAYE = calculatePAYE(annualTaxableIncome)
+  const monthlyPAYE = Math.round((annualPAYE / 12) * 100) / 100
+  const totalDeductions = Math.round((ssnitEmployee + monthlyPAYE) * 100) / 100
+  const netPay = Math.round((grossSalary - totalDeductions) * 100) / 100
+  const effectiveTaxRate = grossSalary > 0 ? Math.round((totalDeductions / grossSalary) * 10000) / 100 : 0
+  return { basicSalary, grossSalary, ssnitEmployee, ssnitEmployer, tier2Employer, paye: monthlyPAYE, totalDeductions, netPay, effectiveTaxRate }
+}
 
-  // SSNIT: employee 5.5%, employer 13% (11% SSNIT + 2% tier 2)
-  const ssnitEmployee = grossSalary * 0.055
-  const ssnitEmployer = grossSalary * 0.11
-  const tier2Employee = 0
-  const tier2Employer = grossSalary * 0.02
-
-  // Taxable income = gross - employee SSNIT contribution
-  const taxableIncome = grossSalary - ssnitEmployee
-
-  // PAYE (annualise, calculate, de-annualise)
-  const annualTaxable = taxableIncome * 12
-  const paye = calculatePAYE(annualTaxable)
-
-  const totalDeductions = ssnitEmployee + paye
-  const netPay = grossSalary - totalDeductions
-
-  return {
-    basicSalary,
-    grossSalary,
-    ssnitEmployee: Math.round(ssnitEmployee * 100) / 100,
-    ssnitEmployer: Math.round(ssnitEmployer * 100) / 100,
-    tier2Employee,
-    tier2Employer: Math.round(tier2Employer * 100) / 100,
-    taxableIncome: Math.round(taxableIncome * 100) / 100,
-    paye: Math.round(paye * 100) / 100,
-    totalDeductions: Math.round(totalDeductions * 100) / 100,
-    netPay: Math.round(netPay * 100) / 100,
-  }
+export function formatGHS(amount: number): string {
+  return `GHS ${amount.toLocaleString('en-GH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
 }
