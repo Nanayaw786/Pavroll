@@ -129,7 +129,7 @@ export default function TeamPage() {
       <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', width: '100%' }}>
 
         {/* Stats */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '14px' }}>
+        <div className="team-stats" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '14px' }}>
           {[
             { label: 'Total Members', value: activeMembers.length, color: '#6366F1', bg: 'rgba(99,102,241,0.08)' },
             { label: 'Admins', value: activeMembers.filter(m => m.role === 'admin').length, color: '#EF4444', bg: 'rgba(239,68,68,0.08)' },
@@ -172,7 +172,7 @@ export default function TeamPage() {
         </div>
 
         {/* Role permissions info */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px' }}>
+        <div className="team-roles" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px' }}>
           {(Object.keys(ROLE_LABELS) as Role[]).map((role, i) => {
             const Icon = ROLE_ICONS[role]
             const color = ROLE_COLORS[role]
@@ -210,7 +210,7 @@ export default function TeamPage() {
             const isCurrentUser = member.clerk_user_id === user?.id
             return (
               <motion.div key={member.id} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
-                style={{ padding: '16px 20px', borderBottom: '1px solid rgba(255,255,255,0.04)', display: 'flex', alignItems: 'center', gap: '14px', flexWrap: 'wrap' }}>
+                className="team-member" style={{ padding: '16px 20px', borderBottom: '1px solid rgba(255,255,255,0.04)', display: 'flex', alignItems: 'center', gap: '14px', flexWrap: 'wrap' }}>
                 <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: `${color}20`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '14px', fontWeight: 700, color, flexShrink: 0 }}>
                   {getInitials(member.name)}
                 </div>
@@ -242,7 +242,7 @@ export default function TeamPage() {
                 </div>
                 <span style={{ fontSize: '12px', color: '#475569' }}>{member.department}</span>
                 {isAdmin && !isCurrentUser && (
-                  <div style={{ display: 'flex', gap: '6px' }}>
+                  <div className="team-member-actions" style={{ display: 'flex', gap: '6px' }}>
                     <button onClick={() => setEditingId(editingId === member.id ? null : member.id)}
                       style={{ width: '30px', height: '30px', borderRadius: '8px', background: 'rgba(99,102,241,0.1)', border: '1px solid rgba(99,102,241,0.2)', color: '#6366F1', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                       <Pencil size={13} />

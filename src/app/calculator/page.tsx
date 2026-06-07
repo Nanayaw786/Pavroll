@@ -97,7 +97,7 @@ function BasicCalculator() {
   }
 
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: '1fr 280px', gap: '20px', alignItems: 'start' }}>
+    <div className="calc-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 280px', gap: '20px', alignItems: 'start' }}>
       <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '20px', overflow: 'hidden' }}>
         {/* Display */}
         <div style={{ padding: '24px 20px', background: 'rgba(0,0,0,0.3)', minHeight: '100px' }}>
@@ -176,7 +176,7 @@ function PAYECalculator() {
 
       {result && (
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '14px' }}>
+          <div className="calc-result-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '14px' }}>
             <ResultCard label="Monthly PAYE" value={fmt(result.paye)} color="#EF4444" large />
             <ResultCard label="Annual PAYE" value={fmt(result.annualPAYE)} color="#F59E0B" large />
             <ResultCard label="Effective Rate" value={`${result.effectiveTaxRate}%`} color="#6366F1" large />
@@ -377,7 +377,7 @@ function ReverseCalculator() {
 
       {result && (
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '14px' }}>
+          <div className="calc-result-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '14px' }}>
             <ResultCard label="Required Gross" value={fmt(result.gross)} color="#8B5CF6" large />
             <ResultCard label="SSNIT Deduction" value={fmt(result.ssnitEmployee)} color="#F59E0B" large />
             <ResultCard label="PAYE Deduction" value={fmt(result.paye)} color="#EF4444" large />
@@ -427,7 +427,7 @@ function OvertimeCalculator() {
 
       {result && (
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '14px' }}>
+          <div className="calc-result-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '14px' }}>
             <ResultCard label="Hourly Rate" value={fmt(result.hourlyRate)} color="#6366F1" />
             <ResultCard label="Overtime Pay" value={fmt(result.otPay)} color="#F59E0B" large />
             <ResultCard label="Gross with OT" value={fmt(result.grossWithOT)} color="#06B6D4" />
@@ -474,7 +474,7 @@ function GratuityCalculator() {
 
       {result && (
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '14px' }}>
+          <div className="calc-result-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '14px' }}>
             <ResultCard label="Annual Salary" value={fmt(result.annualSalary)} color="#6366F1" />
             <ResultCard label="Total Gratuity" value={fmt(result.gratuity)} color="#10B981" large />
             <ResultCard label="Monthly Accrual" value={fmt(result.monthly)} color="#F59E0B" />
@@ -546,7 +546,7 @@ function LoanCalculator() {
 
       {result && (
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '14px' }}>
+          <div className="calc-result-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '14px' }}>
             <ResultCard label="Monthly Deduction" value={fmt(result.monthly)} color="#06B6D4" large />
             <ResultCard label="Total Repayment" value={fmt(result.totalRepayment)} color="#6366F1" large />
             <ResultCard label="Total Interest" value={fmt(result.totalInterest)} color="#F59E0B" large />
@@ -641,7 +641,7 @@ function BonusCalculator() {
 
       {result && (
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '14px' }}>
+          <div className="calc-result-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '14px' }}>
             <ResultCard label="Gross Bonus" value={fmt(result.bonus)} color="#F59E0B" large />
             <ResultCard label="PAYE on Bonus (5%)" value={fmt(result.bonusPAYE)} color="#EF4444" large />
             <ResultCard label="Net Bonus" value={fmt(result.netBonus)} color="#10B981" large />
@@ -684,7 +684,7 @@ function CompareCalculator() {
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '16px', padding: '24px' }}>
         <h3 style={{ fontSize: '15px', fontWeight: 700, color: '#F8FAFC', marginBottom: '16px' }}>Salary Comparison Calculator</h3>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+        <div className="calc-compare-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
             <input value={name1} onChange={e => setName1(e.target.value)} placeholder="Employee A"
               style={{ padding: '8px 14px', borderRadius: '8px', background: 'rgba(99,102,241,0.1)', border: '1px solid rgba(99,102,241,0.2)', color: '#818CF8', fontSize: '13px', fontWeight: 600, outline: 'none' }} />
@@ -742,7 +742,7 @@ export default function CalculatorPage() {
       <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', width: '100%' }}>
 
         {/* Tab navigation */}
-        <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+        <div className="calc-tabs" style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
           {TABS.map(t => (
             <motion.button key={t.key} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
               onClick={() => setTab(t.key as CalcTab)}

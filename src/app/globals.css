@@ -90,6 +90,30 @@ body {
 }
 
 /* ===== GLOBAL MOBILE FIXES ===== */
+
+/* Calculator */
+@media (max-width: 768px) {
+  .calc-grid { grid-template-columns: 1fr !important; }
+  .calc-tabs { flex-wrap: wrap !important; }
+  .calc-result-grid { grid-template-columns: 1fr 1fr !important; }
+  .calc-table-header { display: none !important; }
+  .calc-table-row { grid-template-columns: 1fr 1fr !important; }
+  .calc-compare-grid { grid-template-columns: 1fr !important; }
+}
+
+/* Team Management */
+@media (max-width: 768px) {
+  .team-stats { grid-template-columns: 1fr 1fr !important; }
+  .team-roles { grid-template-columns: 1fr 1fr !important; }
+  .team-member { flex-direction: column !important; align-items: flex-start !important; }
+  .team-member-actions { width: 100% !important; justify-content: flex-end !important; }
+}
+
+@media (max-width: 480px) {
+  .team-stats { grid-template-columns: 1fr !important; }
+  .team-roles { grid-template-columns: 1fr !important; }
+  .calc-result-grid { grid-template-columns: 1fr !important; }
+}
 @media (max-width: 768px) {
 
   /* Trial Banner */
