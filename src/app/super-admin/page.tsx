@@ -9,7 +9,7 @@ import {
   CheckCircle, XCircle, Clock, ToggleRight, Mail, Phone,
   Eye, RefreshCw, Loader2, Crown, AlertTriangle, Calculator,
   Megaphone, DollarSign, PieChart, ArrowUp, ArrowDown,
-  Star, Zap as ZapIcon, Globe, Database, Server
+  Star, Zap as ZapIcon, Globe, Database, Server, Plus
 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { calculatePayroll, DEFAULT_SETTINGS } from '@/lib/payroll'
