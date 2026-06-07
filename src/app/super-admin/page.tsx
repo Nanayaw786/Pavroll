@@ -13,6 +13,7 @@ import {
 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { calculatePayroll, DEFAULT_SETTINGS } from '@/lib/payroll'
+import { getAnalyticsSummary } from '@/lib/analytics'
 
 type Company = {
   id: string
@@ -52,6 +53,7 @@ const PLAN_PRICES: Record<string, number> = {
 const NAV_ITEMS = [
   { key: 'overview', label: 'Overview', icon: BarChart3 },
   { key: 'analytics', label: 'Analytics', icon: PieChart },
+  { key: 'activity', label: 'Activity', icon: Activity },
   { key: 'companies', label: 'Companies', icon: Building2 },
   { key: 'features', label: 'Feature Flags', icon: ToggleRight },
   { key: 'calculator', label: 'Calculator', icon: Calculator },
@@ -202,8 +204,19 @@ export default function SuperAdminPage() {
   const [announcement, setAnnouncement] = useState({ title: '', message: '', type: 'info' })
   const [sendingAnnouncement, setSendingAnnouncement] = useState(false)
   const [sidebarOpen, setSidebarOpen] = useState(true)
+  const [analyticsData, setAnalyticsData] = useState<any>(null)
+  const [loadingAnalytics, setLoadingAnalytics] = useState(false)
 
-  useEffect(() => { loadData() }, [])
+  useEffect(() => { loadData(); loadAnalytics() }, [])
+
+  const loadAnalytics = async () => {
+    setLoadingAnalytics(true)
+    try {
+      const data = await getAnalyticsSummary()
+      setAnalyticsData(data)
+    } catch (err) { console.error(err) }
+    finally { setLoadingAnalytics(false) }
+  }
 
   const loadData = async () => {
     try {
@@ -459,6 +472,133 @@ export default function SuperAdminPage() {
                     )
                   })}
                 </div>
+              </div>
+            )}
+
+            {/* ACTIVITY TAB */}
+            {tab === 'activity' && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                {loadingAnalytics ? (
+                  <div style={{ padding: '60px', textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px' }}>
+                    <Loader2 size={24} color="#EF4444" style={{ animation: 'spin 1s linear infinite' }} />
+                    <span style={{ color: '#475569' }}>Loading activity data...</span>
+                  </div>
+                ) : !analyticsData ? (
+                  <div style={{ padding: '60px', textAlign: 'center', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '16px' }}>
+                    <Activity size={40} color="#475569" style={{ margin: '0 auto 12px' }} />
+                    <p style={{ color: '#F8FAFC', fontSize: '15px', fontWeight: 600, marginBottom: '8px' }}>No Activity Yet</p>
+                    <p style={{ color: '#475569', fontSize: '13px' }}>Activity will appear here as companies use Pavroll</p>
+                  </div>
+                ) : (
+                  <>
+                    {/* Activity stats */}
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px' }}>
+                      {[
+                        { label: 'Total Events', value: analyticsData.total, color: '#6366F1', icon: Activity },
+                        { label: 'Today', value: analyticsData.today, color: '#10B981', icon: TrendingUp },
+                        { label: 'This Week', value: analyticsData.thisWeek, color: '#F59E0B', icon: BarChart3 },
+                        { label: 'This Month', value: analyticsData.thisMonth, color: '#06B6D4', icon: PieChart },
+                        { label: 'Active Companies', value: analyticsData.activeCompanies, color: '#8B5CF6', icon: Building2 },
+                        { label: 'Growth vs Last Month', value: `${analyticsData.growth > 0 ? '+' : ''}${analyticsData.growth}%`, color: analyticsData.growth >= 0 ? '#10B981' : '#EF4444', icon: TrendingUp },
+                      ].map((s, i) => (
+                        <motion.div key={s.label} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.06 }}
+                          style={{ padding: '16px 18px', borderRadius: '14px', background: `${s.color}08`, border: `1px solid ${s.color}20`, display: 'flex', alignItems: 'center', gap: '14px' }}>
+                          <div style={{ width: '38px', height: '38px', borderRadius: '10px', background: `${s.color}15`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                            <s.icon size={18} color={s.color} />
+                          </div>
+                          <div>
+                            <p style={{ fontSize: '22px', fontWeight: 700, color: s.color }}>{s.value}</p>
+                            <p style={{ fontSize: '11px', color: '#475569', marginTop: '1px' }}>{s.label}</p>
+                          </div>
+                        </motion.div>
+                      ))}
+                    </div>
+
+                    {/* Daily activity chart */}
+                    <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '16px', padding: '20px' }}>
+                      <h3 style={{ fontSize: '14px', fontWeight: 600, color: '#F8FAFC', marginBottom: '20px' }}>Daily Activity — Last 7 Days</h3>
+                      <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-end', height: '120px' }}>
+                        {analyticsData.dailyActivity.map((day: any, i: number) => {
+                          const maxEvents = Math.max(...analyticsData.dailyActivity.map((d: any) => d.events), 1)
+                          const height = Math.max(4, (day.events / maxEvents) * 100)
+                          return (
+                            <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px' }}>
+                              <p style={{ fontSize: '10px', color: '#475569', fontWeight: 600 }}>{day.events}</p>
+                              <motion.div initial={{ height: 0 }} animate={{ height: `${height}%` }} transition={{ delay: i * 0.08, duration: 0.5 }}
+                                style={{ width: '100%', borderRadius: '4px', background: 'linear-gradient(to top, #6366F1, #818CF8)', minHeight: '4px' }} />
+                              <p style={{ fontSize: '10px', color: '#475569', textAlign: 'center' }}>{day.date}</p>
+                            </div>
+                          )
+                        })}
+                      </div>
+                    </div>
+
+                    {/* Top pages */}
+                    <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '16px', overflow: 'hidden' }}>
+                      <div style={{ padding: '14px 20px', borderBottom: '1px solid rgba(255,255,255,0.05)', background: 'rgba(255,255,255,0.02)' }}>
+                        <h3 style={{ fontSize: '14px', fontWeight: 600, color: '#F8FAFC' }}>Most Visited Pages</h3>
+                        <p style={{ fontSize: '11px', color: '#475569', marginTop: '2px' }}>Where users spend most time</p>
+                      </div>
+                      {analyticsData.topPages.length === 0 ? (
+                        <div style={{ padding: '32px', textAlign: 'center' }}>
+                          <p style={{ color: '#475569', fontSize: '13px' }}>No page views tracked yet</p>
+                        </div>
+                      ) : analyticsData.topPages.map((page: any, i: number) => {
+                        const maxCount = analyticsData.topPages[0]?.count || 1
+                        const pct = Math.round((page.count / maxCount) * 100)
+                        const pageLabels: Record<string, string> = {
+                          '/dashboard': '📊 Dashboard',
+                          '/employees': '👥 Employees',
+                          '/payroll': '💰 Payroll',
+                          '/payslips': '📄 Payslips',
+                          '/leave': '🏖️ Leave',
+                          '/reports': '📈 Reports',
+                          '/audit': '🛡️ Audit Trail',
+                          '/sms': '📱 Bulk SMS',
+                          '/settings': '⚙️ Settings',
+                          '/calculator': '🧮 Calculator',
+                          '/team': '👨‍👩‍👧 Team',
+                          '/offboarding': '🚪 Offboarding',
+                        }
+                        return (
+                          <div key={i} style={{ padding: '12px 20px', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                              <span style={{ fontSize: '13px', color: '#F8FAFC', fontWeight: 500 }}>{pageLabels[page.page] || page.page}</span>
+                              <span style={{ fontSize: '12px', fontWeight: 700, color: '#6366F1' }}>{page.count} views</span>
+                            </div>
+                            <div style={{ height: '4px', borderRadius: '2px', background: 'rgba(255,255,255,0.06)' }}>
+                              <motion.div initial={{ width: 0 }} animate={{ width: `${pct}%` }} transition={{ delay: i * 0.08, duration: 0.5 }}
+                                style={{ height: '100%', borderRadius: '2px', background: 'linear-gradient(to right, #6366F1, #818CF8)' }} />
+                            </div>
+                          </div>
+                        )
+                      })}
+                    </div>
+
+                    {/* Feature usage */}
+                    <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '16px', padding: '20px' }}>
+                      <h3 style={{ fontSize: '14px', fontWeight: 600, color: '#F8FAFC', marginBottom: '16px' }}>Feature Usage</h3>
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px' }}>
+                        {[
+                          { label: 'Payroll Runs', value: analyticsData.payrollRuns, color: '#6366F1', icon: '💰' },
+                          { label: 'Employees Added', value: analyticsData.employeesAdded, color: '#10B981', icon: '👥' },
+                          { label: 'Payslips Downloaded', value: analyticsData.payslipsDownloaded, color: '#F59E0B', icon: '📄' },
+                          { label: 'SMS Sent', value: analyticsData.smsSent, color: '#06B6D4', icon: '📱' },
+                          { label: 'Leave Submitted', value: analyticsData.leavesSubmitted, color: '#8B5CF6', icon: '🏖️' },
+                          { label: 'Reports Exported', value: analyticsData.reportsExported, color: '#EF4444', icon: '📈' },
+                        ].map(item => (
+                          <div key={item.label} style={{ padding: '14px', borderRadius: '10px', background: `${item.color}08`, border: `1px solid ${item.color}20`, display: 'flex', alignItems: 'center', gap: '12px' }}>
+                            <span style={{ fontSize: '20px' }}>{item.icon}</span>
+                            <div>
+                              <p style={{ fontSize: '18px', fontWeight: 700, color: item.color }}>{item.value}</p>
+                              <p style={{ fontSize: '11px', color: '#475569' }}>{item.label}</p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </>
+                )}
               </div>
             )}
 

@@ -1,11 +1,13 @@
 'use client'
 import TrialBanner from '@/components/ui/TrialBanner'
 import MobileNotice from '@/components/ui/MobileNotice'
+import { usePageTracking } from '@/hooks/usePageTracking'
 import Sidebar from './Sidebar'
 import Topbar from './Topbar'
 import { motion } from 'framer-motion'
 
 export default function DashboardLayout({ children, title }: { children: React.ReactNode, title: string }) {
+  usePageTracking()
   return (
     <div style={{ display: 'flex', minHeight: '100vh', background: '#0A0A0F' }}>
       <Sidebar />
