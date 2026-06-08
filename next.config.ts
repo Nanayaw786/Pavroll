@@ -23,12 +23,12 @@ const nextConfig: NextConfig = {
             key: 'Content-Security-Policy',
             value: [
               "default-src 'self'",
-              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.paystack.co https://clerk.com https://*.clerk.accounts.dev",
-              "style-src 'self' 'unsafe-inline'",
+              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.paystack.co https://clerk.com https://*.clerk.accounts.dev https://clerk.pavroll.com https://*.clerk.services",
+              "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://paystack.com",
               "img-src 'self' data: blob: https:",
-              "font-src 'self' data:",
-              "connect-src 'self' https://*.supabase.co https://api.clerk.com https://*.clerk.accounts.dev https://api.paystack.co https://sms.jospigarbulksms.com https://api.resend.com",
-              "frame-src 'self' https://js.paystack.co https://checkout.paystack.com",
+              "font-src 'self' data: https://fonts.gstatic.com",
+              "connect-src 'self' https://*.supabase.co https://api.clerk.com https://*.clerk.accounts.dev https://clerk.pavroll.com https://*.clerk.services https://api.paystack.co https://sms.jospigarbulksms.com https://api.resend.com",
+              "frame-src 'self' https://js.paystack.co https://checkout.paystack.com https://clerk.pavroll.com",
             ].join('; ')
           },
         ],
