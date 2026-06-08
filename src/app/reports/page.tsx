@@ -238,7 +238,7 @@ export default function ReportsPage() {
                   <p style={{ fontSize: '11px', color: '#475569' }}>{emp.department}</p>
                 </div>
                 <span style={{ fontSize: '13px', color: '#F8FAFC' }}>{fmt(emp.grossSalary)}</span>
-                <span style={{ fontSize: '13px', color: '#94A3B8' }}>{fmt(emp.taxableIncome)}</span>
+                <span style={{ fontSize: '13px', color: '#94A3B8' }}>{fmt((emp.grossSalary - emp.ssnitEmployee))}</span>
                 <span style={{ fontSize: '13px', color: '#EF4444', fontWeight: 600 }}>{fmt(emp.paye)}</span>
                 <span style={{ fontSize: '13px', color: '#10B981', fontWeight: 600 }}>{fmt(emp.netPay)}</span>
               </div>
