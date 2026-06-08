@@ -35,7 +35,7 @@ export default function SettingsPage() {
   const [referralCode, setReferralCode] = useState('')
   const [applyingCode, setApplyingCode] = useState(false)
   const [companyReferralCode, setCompanyReferralCode] = useState('')
-  const [tab, setTab] = useState<'general' | 'senderid' | 'billing' | 'notifications'>('general')
+  const [tab, setTab] = useState<'general' | 'payroll' | 'senderid' | 'billing' | 'notifications'>('general')
   const [form, setForm] = useState({ sender_id: '', purpose: '' })
   const [result, setResult] = useState<{ success: boolean, message: string } | null>(null)
   const [companyForm, setCompanyForm] = useState({ name: '', email: '', phone: '', address: '', tin: '', ssnit_employer_code: '' })
