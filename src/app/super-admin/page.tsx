@@ -200,6 +200,75 @@ function AdminCalculator() {
   )
 }
 
+function BusinessTypeChart({ companies }: { companies: any[] }) {
+  const TYPE_LABELS: Record<string, string> = {
+    general: '🏢 General Business',
+    school: '🏫 School / Education',
+    clinic: '🏥 Clinic / Hospital',
+    ngo: '🌍 NGO / Non-Profit',
+    construction: '🏗️ Construction',
+    hospitality: '🍽️ Hospitality',
+    manufacturing: '🏭 Manufacturing',
+    other: '💡 Other',
+  }
+
+  const TYPE_COLORS: Record<string, string> = {
+    general: '#6366F1',
+    school: '#10B981',
+    clinic: '#EF4444',
+    ngo: '#06B6D4',
+    construction: '#F59E0B',
+    hospitality: '#8B5CF6',
+    manufacturing: '#F97316',
+    other: '#94A3B8',
+  }
+
+  const counts: Record<string, number> = {}
+  companies.forEach(c => {
+    const type = c.business_type || 'general'
+    counts[type] = (counts[type] || 0) + 1
+  })
+
+  const sorted = Object.entries(counts)
+    .sort((a, b) => b[1] - a[1])
+    .map(([key, count]) => ({ key, count, label: TYPE_LABELS[key] || key, color: TYPE_COLORS[key] || '#475569' }))
+
+  const total = companies.length
+
+  return (
+    <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '16px', padding: '20px' }}>
+      <h3 style={{ fontSize: '14px', fontWeight: 600, color: '#F8FAFC', marginBottom: '6px' }}>🏢 Business Types</h3>
+      <p style={{ fontSize: '12px', color: '#475569', marginBottom: '20px' }}>What types of businesses use Pavroll</p>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px', marginBottom: '20px' }}>
+        {sorted.map((item, i) => (
+          <div key={item.key} style={{ padding: '14px', borderRadius: '10px', background: `${item.color}08`, border: `1px solid ${item.color}20`, display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: `${item.color}15`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '16px', flexShrink: 0 }}>
+              {item.label.split(' ')[0]}
+            </div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <p style={{ fontSize: '18px', fontWeight: 700, color: item.color }}>{item.count}</p>
+              <p style={{ fontSize: '11px', color: '#475569', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.label.split(' ').slice(1).join(' ')}</p>
+            </div>
+            <span style={{ fontSize: '11px', color: item.color, fontWeight: 600 }}>{Math.round((item.count / total) * 100)}%</span>
+          </div>
+        ))}
+      </div>
+      {sorted.map((item, i) => (
+        <div key={item.key} style={{ marginBottom: '10px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+            <span style={{ fontSize: '12px', color: '#94A3B8' }}>{item.label}</span>
+            <span style={{ fontSize: '12px', fontWeight: 700, color: item.color }}>{item.count} {item.count === 1 ? 'company' : 'companies'}</span>
+          </div>
+          <div style={{ height: '5px', borderRadius: '3px', background: 'rgba(255,255,255,0.06)' }}>
+            <motion.div initial={{ width: 0 }} animate={{ width: `${(item.count / total) * 100}%` }} transition={{ delay: i * 0.08, duration: 0.5 }}
+              style={{ height: '100%', borderRadius: '3px', background: item.color }} />
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
 function LeadSourceChart({ companies }: { companies: any[] }) {
   const LEAD_LABELS: Record<string, string> = {
     tiktok: '🎵 TikTok',
@@ -587,6 +656,17 @@ export default function SuperAdminPage() {
                         <span style={{ fontSize: '11px', fontWeight: 700, padding: '3px 10px', borderRadius: '999px', background: `${planColor}15`, color: planColor }}>
                           {company.plan?.toUpperCase()}
                         </span>
+                        {(company as any).business_type && (company as any).business_type !== 'general' && (
+                          <span style={{ fontSize: '11px', padding: '3px 10px', borderRadius: '999px', background: 'rgba(245,158,11,0.1)', color: '#F59E0B', fontWeight: 600 }}>
+                            {(company as any).business_type === 'school' ? '🏫 School' :
+                             (company as any).business_type === 'clinic' ? '🏥 Clinic' :
+                             (company as any).business_type === 'ngo' ? '🌍 NGO' :
+                             (company as any).business_type === 'construction' ? '🏗️ Construction' :
+                             (company as any).business_type === 'hospitality' ? '🍽️ Hospitality' :
+                             (company as any).business_type === 'manufacturing' ? '🏭 Manufacturing' :
+                             '💡 Other'}
+                          </span>
+                        )}
                         {company.plan === 'trial' && (
                           <span style={{ fontSize: '11px', color: daysLeft <= 7 ? '#EF4444' : '#F59E0B', fontWeight: 600 }}>{daysLeft}d left</span>
                         )}
@@ -811,6 +891,9 @@ export default function SuperAdminPage() {
 
                 {/* Lead Source */}
                 <LeadSourceChart companies={companies} />
+
+                {/* Business Type Breakdown */}
+                <BusinessTypeChart companies={companies} />
 
               </div>
             )}

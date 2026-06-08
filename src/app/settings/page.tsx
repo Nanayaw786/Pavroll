@@ -30,6 +30,8 @@ export default function SettingsPage() {
   const [leadSource, setLeadSource] = useState('')
   const [leadSourceDetail, setLeadSourceDetail] = useState('')
   const [savingLeadSource, setSavingLeadSource] = useState(false)
+  const [businessType, setBusinessType] = useState('general')
+  const [savingBusinessType, setSavingBusinessType] = useState(false)
   const [referralCode, setReferralCode] = useState('')
   const [applyingCode, setApplyingCode] = useState(false)
   const [companyReferralCode, setCompanyReferralCode] = useState('')
@@ -100,6 +102,7 @@ export default function SettingsPage() {
         if (companyData.lead_source) setLeadSource(companyData.lead_source)
         if (companyData.lead_source_detail) setLeadSourceDetail(companyData.lead_source_detail)
         if (companyData.referral_code) setCompanyReferralCode(companyData.referral_code)
+        if (companyData.business_type) setBusinessType(companyData.business_type)
         if (companyData.payroll_settings) {
           setPayrollSettings(prev => ({ ...prev, ...companyData.payroll_settings }))
         }
@@ -111,6 +114,16 @@ export default function SettingsPage() {
     } finally {
       setLoading(false)
     }
+  }
+
+  const handleSaveBusinessType = async () => {
+    setSavingBusinessType(true)
+    try {
+      await supabase.from('companies').update({ business_type: businessType }).eq('id', companyId)
+      setResult({ success: true, message: 'Business type updated successfully!' })
+      setTimeout(() => setResult(null), 3000)
+    } catch { setResult({ success: false, message: 'Failed to save business type' }) }
+    finally { setSavingBusinessType(false) }
   }
 
   const handleSaveLeadSource = async () => {
@@ -260,6 +273,35 @@ export default function SettingsPage() {
               style={{ marginTop: '20px', padding: '10px 24px', borderRadius: '10px', background: '#6366F1', border: 'none', color: '#fff', fontSize: '13px', fontWeight: 600, cursor: 'pointer', opacity: saving ? 0.7 : 1 }}>
               {saving ? 'Saving...' : 'Save Changes'}
             </motion.button>
+
+            {/* Business Type */}
+            <div style={{ marginTop: '20px', padding: '20px', borderRadius: '14px', background: 'rgba(245,158,11,0.06)', border: '1px solid rgba(245,158,11,0.15)' }}>
+              <h4 style={{ fontSize: '14px', fontWeight: 600, color: '#F8FAFC', marginBottom: '4px' }}>🏢 Business Type</h4>
+              <p style={{ fontSize: '12px', color: '#475569', marginBottom: '14px' }}>Tell us what type of business you run so we can customize your experience</p>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px', marginBottom: '14px' }}>
+                {[
+                  { value: 'general', label: '🏢 General Business', desc: 'Retail, trading, services' },
+                  { value: 'school', label: '🏫 School / Education', desc: 'Nursery, primary, secondary, university' },
+                  { value: 'clinic', label: '🏥 Clinic / Hospital', desc: 'Medical, dental, pharmacy' },
+                  { value: 'ngo', label: '🌍 NGO / Non-Profit', desc: 'Charity, foundation, association' },
+                  { value: 'construction', label: '🏗️ Construction', desc: 'Building, engineering, real estate' },
+                  { value: 'hospitality', label: '🍽️ Hospitality', desc: 'Restaurant, hotel, catering' },
+                  { value: 'manufacturing', label: '🏭 Manufacturing', desc: 'Factory, production, processing' },
+                  { value: 'other', label: '💡 Other', desc: 'Any other business type' },
+                ].map(type => (
+                  <motion.button key={type.value} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
+                    onClick={() => setBusinessType(type.value)}
+                    style={{ padding: '12px', borderRadius: '10px', border: `2px solid ${businessType === type.value ? '#F59E0B' : 'rgba(255,255,255,0.06)'}`, background: businessType === type.value ? 'rgba(245,158,11,0.1)' : 'rgba(255,255,255,0.02)', cursor: 'pointer', textAlign: 'left', transition: 'all 0.15s' }}>
+                    <p style={{ fontSize: '13px', fontWeight: 600, color: businessType === type.value ? '#F59E0B' : '#F8FAFC', marginBottom: '2px' }}>{type.label}</p>
+                    <p style={{ fontSize: '11px', color: '#475569' }}>{type.desc}</p>
+                  </motion.button>
+                ))}
+              </div>
+              <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={handleSaveBusinessType} disabled={savingBusinessType}
+                style={{ padding: '9px 18px', borderRadius: '9px', background: '#F59E0B', border: 'none', color: '#fff', fontSize: '13px', fontWeight: 600, cursor: 'pointer', opacity: savingBusinessType ? 0.7 : 1 }}>
+                {savingBusinessType ? 'Saving...' : '💾 Save Business Type'}
+              </motion.button>
+            </div>
 
             {/* Where did you hear about us */}
             <div style={{ marginTop: '20px', padding: '20px', borderRadius: '14px', background: 'rgba(16,185,129,0.06)', border: '1px solid rgba(16,185,129,0.15)' }}>
