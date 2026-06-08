@@ -65,7 +65,7 @@ export default function ReportsPage() {
 
   const exportPAYE = () => {
     const headers = ['Employee Name', 'Gross Salary', 'Taxable Income', 'PAYE Tax', 'Net Pay']
-    const rows = payrollResults.map(e => [e.name, e.grossSalary, e.taxableIncome, e.paye, e.netPay])
+    const rows = payrollResults.map(e => [e.name, e.grossSalary, (e.grossSalary - e.ssnitEmployee), e.paye, e.netPay])
     const csv = [headers, ...rows].map(r => r.join(',')).join('\n')
     const blob = new Blob([csv], { type: 'text/csv' })
     const url = URL.createObjectURL(blob)
