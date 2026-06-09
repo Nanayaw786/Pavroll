@@ -7,7 +7,7 @@ import { calculatePayroll } from '@/lib/payroll'
 
 const employees = [
 
-  { id: '4', name: 'Akosua Boateng', department: 'Sales', position: 'Sales Lead', basicSalary: 3500, joinDate: '2022-11-20', ssnitNumber: 'SSN-001237', bankName: 'Stanbic Bank', bankAccount: '5566778899' },
+
 ]
 
 const avatarColors = ['#6366F1', '#10B981', '#F59E0B', '#EF4444']

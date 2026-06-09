@@ -11,9 +11,9 @@ import PayrollOrb from '@/components/ui/PayrollOrb'
 import ComplianceAlerts from '@/components/ui/ComplianceAlerts'
 
 const payrollTrend = [
-  { month: 'Jan', amount: 42000 },
+  { month: 'Jan', amount: 0 },
   { month: 'Feb', amount: 47000 },
-  { month: 'Mar', amount: 45000 },
+  { month: 'Mar', amount: 0 },
   { month: 'Apr', amount: 52000 },
   { month: 'May', amount: 49000 },
   { month: 'Jun', amount: 58000 },

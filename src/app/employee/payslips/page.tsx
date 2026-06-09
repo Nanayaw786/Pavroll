@@ -6,10 +6,10 @@ import { FileText, Download, Eye, CheckCircle } from 'lucide-react'
 import { calculatePayroll } from '@/lib/payroll'
 
 const employeeData: Record<string, { position: string, department: string, basicSalary: number, ssnitNumber: string, bankName: string, bankAccount: string }> = {
-  '1': { position: 'Senior Developer', department: 'Engineering', basicSalary: 5000, ssnitNumber: 'SSN-001234', bankName: 'GCB Bank', bankAccount: '1234567890' },
-  '2': { position: 'HR Manager', department: 'HR', basicSalary: 4200, ssnitNumber: 'SSN-001235', bankName: 'Ecobank', bankAccount: '0987654321' },
-  '3': { position: 'Accountant', department: 'Finance', basicSalary: 3800, ssnitNumber: 'SSN-001236', bankName: 'Absa Bank', bankAccount: '1122334455' },
-  '4': { position: 'Sales Lead', department: 'Sales', basicSalary: 3500, ssnitNumber: 'SSN-001237', bankName: 'Stanbic Bank', bankAccount: '5566778899' },
+
+
+
+
 }
 
 const payslipMonths = [

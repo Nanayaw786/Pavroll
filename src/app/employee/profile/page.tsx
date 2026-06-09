@@ -5,10 +5,10 @@ import { useEffect, useState } from 'react'
 import { Save, User, CreditCard, FileText, Shield } from 'lucide-react'
 
 const employeeData: Record<string, any> = {
-  '1': { position: 'Senior Developer', department: 'Engineering', basicSalary: 5000, ssnitNumber: 'SSN-001234', bankName: 'GCB Bank', bankAccount: '1234567890', phone: '0244123456', ghanaCard: 'GHA-000123456-7', joinDate: '2023-01-15', employmentType: 'Full-time' },
-  '2': { position: 'HR Manager', department: 'HR', basicSalary: 4200, ssnitNumber: 'SSN-001235', bankName: 'Ecobank', bankAccount: '0987654321', phone: '0244234567', ghanaCard: 'GHA-000234567-8', joinDate: '2022-06-01', employmentType: 'Full-time' },
-  '3': { position: 'Accountant', department: 'Finance', basicSalary: 3800, ssnitNumber: 'SSN-001236', bankName: 'Absa Bank', bankAccount: '1122334455', phone: '0244345678', ghanaCard: 'GHA-000345678-9', joinDate: '2023-03-10', employmentType: 'Full-time' },
-  '4': { position: 'Sales Lead', department: 'Sales', basicSalary: 3500, ssnitNumber: 'SSN-001237', bankName: 'Stanbic Bank', bankAccount: '5566778899', phone: '0244456789', ghanaCard: 'GHA-000456789-0', joinDate: '2022-11-20', employmentType: 'Full-time' },
+
+
+
+
 }
 
 const tabs = [

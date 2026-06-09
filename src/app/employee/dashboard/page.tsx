@@ -7,10 +7,10 @@ import { calculatePayroll } from '@/lib/payroll'
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts'
 
 const employeeData: Record<string, { position: string, department: string, basicSalary: number, joinDate: string, ssnitNumber: string, bankName: string, leaveBalance: number }> = {
-  '1': { position: 'Senior Developer', department: 'Engineering', basicSalary: 5000, joinDate: '2023-01-15', ssnitNumber: 'SSN-001234', bankName: 'GCB Bank', leaveBalance: 18 },
-  '2': { position: 'HR Manager', department: 'HR', basicSalary: 4200, joinDate: '2022-06-01', ssnitNumber: 'SSN-001235', bankName: 'Ecobank', leaveBalance: 12 },
-  '3': { position: 'Accountant', department: 'Finance', basicSalary: 3800, joinDate: '2023-03-10', ssnitNumber: 'SSN-001236', bankName: 'Absa Bank', leaveBalance: 20 },
-  '4': { position: 'Sales Lead', department: 'Sales', basicSalary: 3500, joinDate: '2022-11-20', ssnitNumber: 'SSN-001237', bankName: 'Stanbic Bank', leaveBalance: 15 },
+
+
+
+
 }
 
 const months = ['Jan','Feb','Mar','Apr','May','Jun']

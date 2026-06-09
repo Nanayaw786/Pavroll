@@ -7,7 +7,7 @@ import { calculatePayroll } from '@/lib/payroll'
 
 const employees = [
 
-  { id: '4', name: 'Akosua Boateng', email: 'akosua@company.com', department: 'Sales', position: 'Sales Lead', basicSalary: 3500, ssnitNumber: 'SSN-001237', bankName: 'Stanbic Bank', bankAccount: '5566778899' },
+
 ]
 
 const months = ['January','February','March','April','May','June','July','August','September','October','November','December']

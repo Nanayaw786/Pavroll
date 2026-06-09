@@ -5,9 +5,9 @@ import { useRouter } from 'next/navigation'
 import { Zap, Eye, EyeOff, Lock, Mail } from 'lucide-react'
 
 const mockEmployees = [
-  { id: '1', email: 'kwame@company.com', password: 'pass123', name: 'Kwame Mensah' },
-  { id: '2', email: 'ama@company.com', password: 'pass123', name: 'Ama Owusu' },
-  { id: '3', email: 'kofi@company.com', password: 'pass123', name: 'Kofi Asante' },
+
+
+
   { id: '4', email: 'akosua@company.com', password: 'pass123', name: 'Akosua Boateng' },
 ]
 
@@ -88,7 +88,7 @@ export default function EmployeeLogin() {
 
           <div style={{ marginTop: '20px', padding: '12px 14px', borderRadius: '10px', background: 'rgba(99,102,241,0.06)', border: '1px solid rgba(99,102,241,0.15)' }}>
             <p style={{ fontSize: '11px', color: '#818CF8', fontWeight: 600, marginBottom: '4px' }}>Demo credentials</p>
-            <p style={{ fontSize: '11px', color: '#475569' }}>Email: kwame@company.com</p>
+
             <p style={{ fontSize: '11px', color: '#475569' }}>Password: pass123</p>
           </div>
         </div>
