@@ -36,7 +36,18 @@ export default function Dashboard() {
     if (!user) return
     try {
       setLoading(true)
-      const cId = await getCompanyId(user.id)
+      let cId = await getCompanyId(user.id)
+      
+      // Create company for new users
+      if (!cId) {
+        const { createCompanyForUser } = await import('@/lib/employees')
+        cId = await createCompanyForUser(
+          user.id,
+          user.primaryEmailAddress?.emailAddress || '',
+          user.fullName || user.firstName || 'Admin'
+        )
+      }
+      
       if (!cId) return
       setCompanyId(cId)
 
