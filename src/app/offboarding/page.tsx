@@ -5,7 +5,7 @@ import { useState } from 'react'
 import { UserX, CheckCircle, Clock, AlertTriangle, Download, ChevronDown, ChevronUp, Calendar } from 'lucide-react'
 import { calculatePayroll } from '@/lib/payroll'
 
-const employees = [
+const employees: any[] = [
 
 
 ]

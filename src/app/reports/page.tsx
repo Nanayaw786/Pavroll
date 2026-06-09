@@ -6,7 +6,7 @@ import { Download, FileText, BarChart3, TrendingUp } from 'lucide-react'
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend } from 'recharts'
 import { calculatePayroll } from '@/lib/payroll'
 
-const employees = [
+const employees: any[] = [
 
 
 ]
