@@ -12,12 +12,12 @@ import ComplianceAlerts from '@/components/ui/ComplianceAlerts'
 
 const payrollTrend = [
   { month: 'Jan', amount: 0 },
-  { month: 'Feb', amount: 47000 },
+  { month: 'Feb', amount: 0 },
   { month: 'Mar', amount: 0 },
-  { month: 'Apr', amount: 52000 },
-  { month: 'May', amount: 49000 },
-  { month: 'Jun', amount: 58000 },
-  { month: 'Jul', amount: 61000 },
+  { month: 'Apr', amount: 0 },
+  { month: 'May', amount: 0 },
+  { month: 'Jun', amount: 0 },
+  { month: 'Jul', amount: 0 },
 ]
 
 const deductionData = [

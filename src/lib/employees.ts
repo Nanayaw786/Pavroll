@@ -19,37 +19,29 @@ export type Employee = {
   created_at: string
 }
 
-// Get company ID for current user by clerk_user_id
+// Get company ID for current user - STRICTLY by clerk_user_id
 export async function getCompanyId(clerkUserId?: string): Promise<string> {
+  if (!clerkUserId) return ''
+  
   try {
-    if (clerkUserId) {
-      // Check company_members first
-      const { data: memberData } = await supabase
-        .from('company_members')
-        .select('company_id')
-        .eq('clerk_user_id', clerkUserId)
-        .eq('is_active', true)
-        .limit(1)
-        .single()
-      if (memberData?.company_id) return memberData.company_id
+    // Check company_members first
+    const { data: memberData } = await supabase
+      .from('company_members')
+      .select('company_id')
+      .eq('clerk_user_id', clerkUserId)
+      .eq('is_active', true)
+      .maybeSingle()
+    if (memberData?.company_id) return memberData.company_id
 
-      // Check companies table
-      const { data: companyData } = await supabase
-        .from('companies')
-        .select('id')
-        .eq('clerk_user_id', clerkUserId)
-        .single()
-      if (companyData?.id) return companyData.id
-    }
-
-    // Last resort fallback - get first company for this session
-    const { data: fallback } = await supabase
+    // Check companies table directly
+    const { data: companyData } = await supabase
       .from('companies')
       .select('id')
-      .order('created_at', { ascending: true })
-      .limit(1)
-      .single()
-    return fallback?.id || ''
+      .eq('clerk_user_id', clerkUserId)
+      .maybeSingle()
+    if (companyData?.id) return companyData.id
+
+    return ''
   } catch (err) {
     console.error('getCompanyId error:', err)
     return ''
@@ -63,7 +55,7 @@ export async function createCompanyForUser(
   userName: string
 ): Promise<string> {
   try {
-    // Check if company already exists
+    // Check if already exists
     const existing = await getCompanyId(clerkUserId)
     if (existing) return existing
 
@@ -81,21 +73,11 @@ export async function createCompanyForUser(
         trial_started_at: now.toISOString(),
         trial_ends_at: trialEnds.toISOString(),
         features: {
-          payslips: true,
-          leave: true,
-          reports: true,
-          audit_trail: true,
-          offboarding: true,
-          bulk_sms: true,
-          calculator: true,
-          team: true,
-          ess_portal: true,
-          sender_id: true,
-          loan_module: false,
-          bonus_payroll: false,
-          variance_alerts: false,
-          custom_reports: false,
-          multi_currency: false,
+          payslips: true, leave: true, reports: true,
+          audit_trail: true, offboarding: true, bulk_sms: true,
+          calculator: true, team: true, ess_portal: true,
+          sender_id: true, loan_module: false, bonus_payroll: false,
+          variance_alerts: false, custom_reports: false, multi_currency: false,
         }
       })
       .select('id')
@@ -103,7 +85,6 @@ export async function createCompanyForUser(
 
     if (error) throw error
 
-    // Add as admin member
     await supabase.from('company_members').insert({
       company_id: data.id,
       clerk_user_id: clerkUserId,
@@ -124,6 +105,7 @@ export async function createCompanyForUser(
 }
 
 export async function getEmployees(companyId: string) {
+  if (!companyId) return []
   const { data, error } = await supabase
     .from('employees')
     .select('*')
@@ -163,14 +145,5 @@ export async function toggleEmployeeStatus(id: string, status: 'active' | 'archi
 }
 
 export async function seedDemoEmployees(companyId: string) {
-  const existing = await getEmployees(companyId)
-  if (existing.length > 0) return
-  const demo = [
-    { company_id: companyId, name: 'Kwame Mensah', email: 'kwame@company.com', phone: '0244123456', department: 'Engineering', position: 'Senior Developer', basic_salary: 5000, ssnit_number: 'SSN-001234', bank_name: 'GCB Bank', bank_account: '1234567890', ghana_card: 'GHA-000123456-7', join_date: '2023-01-15', employment_type: 'Full-time', status: 'active' as const },
-    { company_id: companyId, name: 'Ama Owusu', email: 'ama@company.com', phone: '0244234567', department: 'HR', position: 'HR Manager', basic_salary: 4200, ssnit_number: 'SSN-001235', bank_name: 'Ecobank', bank_account: '0987654321', ghana_card: 'GHA-000234567-8', join_date: '2022-06-01', employment_type: 'Full-time', status: 'active' as const },
-    { company_id: companyId, name: 'Kofi Asante', email: 'kofi@company.com', phone: '0244345678', department: 'Finance', position: 'Accountant', basic_salary: 3800, ssnit_number: 'SSN-001236', bank_name: 'Absa Bank', bank_account: '1122334455', ghana_card: 'GHA-000345678-9', join_date: '2023-03-10', employment_type: 'Full-time', status: 'active' as const },
-  ]
-  for (const emp of demo) {
-    await supabase.from('employees').insert(emp)
-  }
+  // Disabled - companies start fresh
 }
