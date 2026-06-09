@@ -6,9 +6,7 @@ import { Download, Send, Eye, FileText, CheckCircle } from 'lucide-react'
 import { calculatePayroll } from '@/lib/payroll'
 
 const employees = [
-  { id: '1', name: 'Kwame Mensah', email: 'kwame@company.com', department: 'Engineering', position: 'Senior Developer', basicSalary: 5000, ssnitNumber: 'SSN-001234', bankName: 'GCB Bank', bankAccount: '1234567890' },
-  { id: '2', name: 'Ama Owusu', email: 'ama@company.com', department: 'HR', position: 'HR Manager', basicSalary: 4200, ssnitNumber: 'SSN-001235', bankName: 'Ecobank', bankAccount: '0987654321' },
-  { id: '3', name: 'Kofi Asante', email: 'kofi@company.com', department: 'Finance', position: 'Accountant', basicSalary: 3800, ssnitNumber: 'SSN-001236', bankName: 'Absa Bank', bankAccount: '1122334455' },
+
   { id: '4', name: 'Akosua Boateng', email: 'akosua@company.com', department: 'Sales', position: 'Sales Lead', basicSalary: 3500, ssnitNumber: 'SSN-001237', bankName: 'Stanbic Bank', bankAccount: '5566778899' },
 ]
 

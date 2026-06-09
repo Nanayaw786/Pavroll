@@ -7,9 +7,7 @@ import { BarChart, Bar, LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContai
 import { calculatePayroll } from '@/lib/payroll'
 
 const employees = [
-  { id: '1', name: 'Kwame Mensah', department: 'Engineering', ssnitNumber: 'SSN-001234', basicSalary: 5000 },
-  { id: '2', name: 'Ama Owusu', department: 'HR', ssnitNumber: 'SSN-001235', basicSalary: 4200 },
-  { id: '3', name: 'Kofi Asante', department: 'Finance', ssnitNumber: 'SSN-001236', basicSalary: 3800 },
+
   { id: '4', name: 'Akosua Boateng', department: 'Sales', ssnitNumber: 'SSN-001237', basicSalary: 3500 },
 ]
 

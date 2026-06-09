@@ -6,9 +6,7 @@ import { UserX, CheckCircle, Clock, AlertTriangle, Download, ChevronDown, Chevro
 import { calculatePayroll } from '@/lib/payroll'
 
 const employees = [
-  { id: '1', name: 'Kwame Mensah', department: 'Engineering', position: 'Senior Developer', basicSalary: 5000, joinDate: '2023-01-15', ssnitNumber: 'SSN-001234', bankName: 'GCB Bank', bankAccount: '1234567890' },
-  { id: '2', name: 'Ama Owusu', department: 'HR', position: 'HR Manager', basicSalary: 4200, joinDate: '2022-06-01', ssnitNumber: 'SSN-001235', bankName: 'Ecobank', bankAccount: '0987654321' },
-  { id: '3', name: 'Kofi Asante', department: 'Finance', position: 'Accountant', basicSalary: 3800, joinDate: '2023-03-10', ssnitNumber: 'SSN-001236', bankName: 'Absa Bank', bankAccount: '1122334455' },
+
   { id: '4', name: 'Akosua Boateng', department: 'Sales', position: 'Sales Lead', basicSalary: 3500, joinDate: '2022-11-20', ssnitNumber: 'SSN-001237', bankName: 'Stanbic Bank', bankAccount: '5566778899' },
 ]
 

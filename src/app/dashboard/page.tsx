@@ -28,7 +28,7 @@ const deductionData = [
 ]
 
 const deptData = [
-  { dept: 'Engineering', spend: 28000 },
+
   { dept: 'Sales', spend: 18000 },
   { dept: 'HR', spend: 9000 },
   { dept: 'Finance', spend: 12000 },
