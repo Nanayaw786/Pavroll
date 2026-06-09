@@ -36,10 +36,10 @@ const deptData = [
 ]
 
 const stats = [
-  { label: 'Total Employees', value: 24, display: '24', change: '+2', icon: Users, color: '#6366F1', bg: 'rgba(99,102,241,0.12)' },
-  { label: 'Monthly Payroll', value: 0, display: 'GHS 61,240', change: '+8.2%', icon: CreditCard, color: '#10B981', bg: 'rgba(16,185,129,0.12)' },
-  { label: 'Avg. Salary', value: 0, display: 'GHS 2,552', change: '+3.1%', icon: TrendingUp, color: '#F59E0B', bg: 'rgba(245,158,11,0.12)' },
-  { label: 'Payslips Sent', value: 24, display: '24', change: '100%', icon: FileText, color: '#06B6D4', bg: 'rgba(6,182,212,0.12)' },
+  { label: 'Total Employees', value: 0, display: '0', change: '', icon: Users, color: '#6366F1', bg: 'rgba(99,102,241,0.12)' },
+  { label: 'Monthly Payroll', value: 0, display: 'GHS 0', change: '', icon: CreditCard, color: '#10B981', bg: 'rgba(16,185,129,0.12)' },
+  { label: 'Avg. Salary', value: 0, display: 'GHS 0', change: '', icon: TrendingUp, color: '#F59E0B', bg: 'rgba(245,158,11,0.12)' },
+  { label: 'Payslips Sent', value: 0, display: '0', change: '', icon: FileText, color: '#06B6D4', bg: 'rgba(6,182,212,0.12)' },
 ]
 
 const CustomTooltip = ({ active, payload, label }: any) => {
