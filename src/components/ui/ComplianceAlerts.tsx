@@ -1,7 +1,7 @@
 'use client'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useState } from 'react'
-import { AlertTriangle, CheckCircle, Clock, X, Bell } from 'lucide-react'
+import { AlertTriangle, CheckCircle, Clock, Bell } from 'lucide-react'
 
 type Alert = {
   id: string
@@ -12,12 +12,55 @@ type Alert = {
   daysLeft: number
 }
 
-const alerts: Alert[] = [
-  { id: '1', type: 'urgent', title: 'SSNIT Contribution Due', desc: 'Monthly SSNIT contributions for June 2026 must be filed with SSNIT by the 14th.', deadline: '14 June 2026', daysLeft: 10 },
-  { id: '2', type: 'warning', title: 'PAYE Filing Deadline', desc: 'Submit your monthly PAYE return to GRA for June 2026. Late filing attracts a penalty.', deadline: '21 June 2026', daysLeft: 17 },
-  { id: '3', type: 'info', title: 'Tier 2 Pension Remittance', desc: 'Remit Tier 2 pension contributions to your approved trustee for June 2026.', deadline: '14 June 2026', daysLeft: 10 },
-  { id: '4', type: 'done', title: 'May 2026 SSNIT Filed', desc: 'SSNIT contributions for May 2026 were successfully submitted.', deadline: '14 May 2026', daysLeft: 0 },
-]
+function getAlerts(): Alert[] {
+  const now = new Date()
+  const month = now.toLocaleString('en-GH', { month: 'long', year: 'numeric' })
+  const prevMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1)
+    .toLocaleString('en-GH', { month: 'long', year: 'numeric' })
+  const year = now.getFullYear()
+  const m = now.getMonth()
+
+  const ssnit14 = new Date(year, m, 14)
+  const paye15 = new Date(year, m, 15)
+  const tier14 = new Date(year, m, 14)
+
+  const daysTo = (d: Date) => Math.ceil((d.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
+
+  return [
+    {
+      id: '1',
+      type: daysTo(ssnit14) <= 3 ? 'urgent' : daysTo(ssnit14) <= 7 ? 'warning' : daysTo(ssnit14) < 0 ? 'done' : 'info',
+      title: 'SSNIT Contribution Due',
+      desc: `Monthly SSNIT contributions for ${month} must be filed with SSNIT by the 14th.`,
+      deadline: `14 ${month}`,
+      daysLeft: Math.max(0, daysTo(ssnit14)),
+    },
+    {
+      id: '2',
+      type: daysTo(paye15) <= 3 ? 'urgent' : daysTo(paye15) <= 7 ? 'warning' : daysTo(paye15) < 0 ? 'done' : 'info',
+      title: 'PAYE Filing Deadline',
+      desc: `Submit your monthly PAYE return to GRA for ${month}. Late filing attracts a penalty.`,
+      deadline: `15 ${month}`,
+      daysLeft: Math.max(0, daysTo(paye15)),
+    },
+    {
+      id: '3',
+      type: daysTo(tier14) <= 3 ? 'urgent' : daysTo(tier14) <= 7 ? 'warning' : daysTo(tier14) < 0 ? 'done' : 'info',
+      title: 'Tier 2 Pension Remittance',
+      desc: `Remit Tier 2 pension contributions to your approved trustee for ${month}.`,
+      deadline: `14 ${month}`,
+      daysLeft: Math.max(0, daysTo(tier14)),
+    },
+    {
+      id: '4',
+      type: 'done',
+      title: `${prevMonth} SSNIT Filed`,
+      desc: `SSNIT contributions for ${prevMonth} deadline has passed.`,
+      deadline: `14 ${prevMonth}`,
+      daysLeft: 0,
+    },
+  ]
+}
 
 const typeConfig = {
   urgent: { color: '#EF4444', bg: 'rgba(239,68,68,0.08)', border: 'rgba(239,68,68,0.2)', icon: AlertTriangle, label: 'Urgent' },
@@ -29,13 +72,12 @@ const typeConfig = {
 export default function ComplianceAlerts() {
   const [dismissed, setDismissed] = useState<string[]>([])
   const [expanded, setExpanded] = useState(true)
-
+  const alerts = getAlerts()
   const visible = alerts.filter(a => !dismissed.includes(a.id))
   const active = visible.filter(a => a.type !== 'done')
 
   return (
     <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '16px', overflow: 'hidden' }}>
-      {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 20px', borderBottom: expanded ? '1px solid rgba(255,255,255,0.05)' : 'none', cursor: 'pointer' }}
         onClick={() => setExpanded(!expanded)}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -52,53 +94,39 @@ export default function ComplianceAlerts() {
             </span>
           )}
         </div>
-        <span style={{ fontSize: '12px', color: '#475569' }}>{expanded ? '▲' : '▼'}</span>
+        <span style={{ color: '#475569', fontSize: '18px' }}>{expanded ? '▲' : '▼'}</span>
       </div>
 
-      {/* Alerts */}
       <AnimatePresence>
         {expanded && (
-          <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.2 }}>
-            <div style={{ padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              {visible.length === 0 && (
-                <div style={{ textAlign: 'center', padding: '20px', color: '#475569', fontSize: '13px' }}>
-                  All alerts dismissed ✓
-                </div>
-              )}
-              <AnimatePresence>
-                {visible.map(alert => {
-                  const cfg = typeConfig[alert.type]
-                  const Icon = cfg.icon
-                  return (
-                    <motion.div key={alert.id} initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 8, height: 0 }} layout
-                      style={{ display: 'flex', alignItems: 'flex-start', gap: '12px', padding: '12px 14px', borderRadius: '10px', background: cfg.bg, border: `1px solid ${cfg.border}`, position: 'relative' }}>
-                      <div style={{ width: '28px', height: '28px', borderRadius: '8px', background: cfg.color + '15', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: '1px' }}>
-                        <Icon size={14} color={cfg.color} />
-                      </div>
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '3px' }}>
+          <motion.div initial={{ height: 0 }} animate={{ height: 'auto' }} exit={{ height: 0 }} style={{ overflow: 'hidden' }}>
+            {visible.map(alert => {
+              const cfg = typeConfig[alert.type]
+              const Icon = cfg.icon
+              return (
+                <div key={alert.id} style={{ padding: '14px 20px', borderBottom: '1px solid rgba(255,255,255,0.04)', background: cfg.bg }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
+                    <div style={{ display: 'flex', gap: '12px', flex: 1 }}>
+                      <Icon size={16} color={cfg.color} style={{ marginTop: '2px', flexShrink: 0 }} />
+                      <div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
                           <p style={{ fontSize: '13px', fontWeight: 600, color: '#F8FAFC' }}>{alert.title}</p>
-                          <span style={{ fontSize: '10px', fontWeight: 700, padding: '2px 7px', borderRadius: '999px', background: cfg.color + '15', color: cfg.color, border: `1px solid ${cfg.color}25` }}>{cfg.label}</span>
+                          <span style={{ fontSize: '10px', padding: '2px 8px', borderRadius: '999px', background: `${cfg.color}20`, color: cfg.color, fontWeight: 600 }}>{cfg.label}</span>
                         </div>
-                        <p style={{ fontSize: '12px', color: '#94A3B8', lineHeight: 1.5 }}>{alert.desc}</p>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginTop: '6px' }}>
-                          <span style={{ fontSize: '11px', color: '#475569' }}>Deadline: <span style={{ color: cfg.color, fontWeight: 600 }}>{alert.deadline}</span></span>
-                          {alert.daysLeft > 0 && (
-                            <span style={{ fontSize: '11px', fontWeight: 600, color: alert.daysLeft <= 7 ? '#EF4444' : '#F59E0B' }}>
-                              {alert.daysLeft} days left
-                            </span>
-                          )}
-                        </div>
+                        <p style={{ fontSize: '12px', color: '#64748B', lineHeight: 1.5 }}>{alert.desc}</p>
+                        <p style={{ fontSize: '11px', color: cfg.color, marginTop: '4px', fontWeight: 600 }}>
+                          Deadline: {alert.deadline}{alert.daysLeft > 0 ? ` — ${alert.daysLeft} days left` : ''}
+                        </p>
                       </div>
-                      <button onClick={() => setDismissed(prev => [...prev, alert.id])}
-                        style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: '#475569', padding: '2px', flexShrink: 0 }}>
-                        <X size={14} />
-                      </button>
-                    </motion.div>
-                  )
-                })}
-              </AnimatePresence>
-            </div>
+                    </div>
+                    {alert.type !== 'done' && (
+                      <button onClick={() => setDismissed(p => [...p, alert.id])}
+                        style={{ background: 'none', border: 'none', color: '#475569', cursor: 'pointer', fontSize: '16px', flexShrink: 0 }}>×</button>
+                    )}
+                  </div>
+                </div>
+              )
+            })}
           </motion.div>
         )}
       </AnimatePresence>

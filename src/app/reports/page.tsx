@@ -14,12 +14,12 @@ const employees: any[] = [
 const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
 
 const monthlyData = [
-  { month: 'Jan', gross: 14800, net: 11800, paye: 2100, ssnit: 900 },
-  { month: 'Feb', gross: 15200, net: 12100, paye: 2200, ssnit: 900 },
+  { month: 'Jan', gross: 0, net: 0, paye: 0, ssnit: 0 },
+  { month: 'Feb', gross: 0, net: 0, paye: 0, ssnit: 0 },
 
-  { month: 'Apr', gross: 16000, net: 12700, paye: 2350, ssnit: 950 },
-  { month: 'May', gross: 15800, net: 12500, paye: 2300, ssnit: 1000 },
-  { month: 'Jun', gross: 16500, net: 13127, paye: 2465, ssnit: 908 },
+  { month: 'Apr', gross: 0, net: 0, paye: 0, ssnit: 0 },
+  { month: 'May', gross: 0, net: 0, paye: 0, ssnit: 0 },
+  { month: 'Jun', gross: 0, net: 0, paye: 0, ssnit: 0 },
 ]
 
 const CustomTooltip = ({ active, payload, label }: any) => {

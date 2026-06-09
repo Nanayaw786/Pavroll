@@ -21,15 +21,15 @@ const payrollTrend = [
 ]
 
 const deductionData = [
-  { name: 'Net Pay', value: 68, color: '#6366F1' },
-  { name: 'PAYE', value: 18, color: '#10B981' },
-  { name: 'SSNIT', value: 9, color: '#F59E0B' },
-  { name: 'Tier 2', value: 5, color: '#06B6D4' },
+  { name: 'Net Pay', value: 0, color: '#6366F1' },
+  { name: 'PAYE', value: 0, color: '#10B981' },
+  { name: 'SSNIT', value: 0, color: '#F59E0B' },
+  { name: 'Tier 2', value: 0, color: '#06B6D4' },
 ]
 
 const deptData = [
 
-  { dept: 'Sales', spend: 18000 },
+  { dept: 'Sales', spend: 0 },
   { dept: 'HR', spend: 9000 },
   { dept: 'Finance', spend: 12000 },
   { dept: 'Ops', spend: 7000 },
