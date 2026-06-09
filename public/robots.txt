@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://pavroll.com/sitemap.xml
