@@ -46,6 +46,18 @@ export default function Dashboard() {
           user.primaryEmailAddress?.emailAddress || '',
           user.fullName || user.firstName || 'Admin'
         )
+        // New user - redirect to onboarding
+        if (cId) {
+          window.location.href = '/onboarding'
+          return
+        }
+      } else {
+        // Check if company has been onboarded (has a real name)
+        const { data: co } = await supabase.from('companies').select('name, phone').eq('id', cId).single()
+        if (!co?.phone && (co?.name?.includes("'s Company") || co?.name?.includes('My Company'))) {
+          window.location.href = '/onboarding'
+          return
+        }
       }
       
       if (!cId) return
