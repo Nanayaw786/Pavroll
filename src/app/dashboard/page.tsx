@@ -3,6 +3,7 @@ import DashboardLayout from '@/components/layout/DashboardLayout'
 import { motion } from 'framer-motion'
 import { useState, useEffect } from 'react'
 import { useUser } from '@clerk/nextjs'
+import { useRouter } from 'next/navigation'
 import { Users, CreditCard, TrendingUp, FileText } from 'lucide-react'
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar } from 'recharts'
 import ComplianceAlerts from '@/components/ui/ComplianceAlerts'
@@ -12,6 +13,7 @@ import { supabase } from '@/lib/supabase'
 
 export default function Dashboard() {
   const { user } = useUser()
+  const router = useRouter()
   const [loading, setLoading] = useState(true)
   const [companyId, setCompanyId] = useState('')
   const [companyName, setCompanyName] = useState('')
@@ -38,26 +40,33 @@ export default function Dashboard() {
       setLoading(true)
       let cId = await getCompanyId(user.id)
       
-      // Create company for new users
       if (!cId) {
+        // Brand new user - create company and send to onboarding
         const { createCompanyForUser } = await import('@/lib/employees')
         cId = await createCompanyForUser(
           user.id,
           user.primaryEmailAddress?.emailAddress || '',
           user.fullName || user.firstName || 'Admin'
         )
-        // New user - redirect to onboarding
-        if (cId) {
-          window.location.href = '/onboarding'
-          return
-        }
-      } else {
-        // Check if company has been onboarded (has a real name)
-        const { data: co } = await supabase.from('companies').select('name, phone').eq('id', cId).single()
-        if (!co?.phone && (co?.name?.includes("'s Company") || co?.name?.includes('My Company'))) {
-          window.location.href = '/onboarding'
-          return
-        }
+        router.push('/onboarding')
+        return
+      }
+
+      // Check if onboarding completed
+      const { data: co } = await supabase
+        .from('companies')
+        .select('name, phone')
+        .eq('id', cId)
+        .single()
+
+      const needsOnboarding = !co?.phone || 
+        co?.name?.includes("'s Company") || 
+        co?.name?.includes('My Company') ||
+        co?.name === ''
+
+      if (needsOnboarding) {
+        router.push('/onboarding')
+        return
       }
       
       if (!cId) return
