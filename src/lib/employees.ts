@@ -42,9 +42,14 @@ export async function getCompanyId(clerkUserId?: string): Promise<string> {
       if (companyData?.id) return companyData.id
     }
 
-    // No company found - return empty string
-    // New company will be created on dashboard load
-    return ''
+    // Last resort fallback - get first company for this session
+    const { data: fallback } = await supabase
+      .from('companies')
+      .select('id')
+      .order('created_at', { ascending: true })
+      .limit(1)
+      .single()
+    return fallback?.id || ''
   } catch (err) {
     console.error('getCompanyId error:', err)
     return ''
