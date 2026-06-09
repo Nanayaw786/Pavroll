@@ -1,228 +1,290 @@
 'use client'
 import DashboardLayout from '@/components/layout/DashboardLayout'
 import { motion } from 'framer-motion'
-import { Users, CreditCard, TrendingUp, FileText, ArrowUpRight } from 'lucide-react'
-import {
-  AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell,
-  XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid
-} from 'recharts'
-import { useEffect, useState } from 'react'
-import PayrollOrb from '@/components/ui/PayrollOrb'
+import { useState, useEffect } from 'react'
+import { useUser } from '@clerk/nextjs'
+import { Users, CreditCard, TrendingUp, FileText } from 'lucide-react'
+import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar } from 'recharts'
 import ComplianceAlerts from '@/components/ui/ComplianceAlerts'
-
-const payrollTrend = [
-  { month: 'Jan', amount: 0 },
-  { month: 'Feb', amount: 0 },
-  { month: 'Mar', amount: 0 },
-  { month: 'Apr', amount: 0 },
-  { month: 'May', amount: 0 },
-  { month: 'Jun', amount: 0 },
-  { month: 'Jul', amount: 0 },
-]
-
-const deductionData = [
-  { name: 'Net Pay', value: 0, color: '#6366F1' },
-  { name: 'PAYE', value: 0, color: '#10B981' },
-  { name: 'SSNIT', value: 0, color: '#F59E0B' },
-  { name: 'Tier 2', value: 0, color: '#06B6D4' },
-]
-
-const deptData = [
-
-  { dept: 'Sales', spend: 0 },
-  { dept: 'HR', spend: 9000 },
-  { dept: 'Finance', spend: 12000 },
-  { dept: 'Ops', spend: 7000 },
-]
-
-const stats = [
-  { label: 'Total Employees', value: 0, display: '0', change: '', icon: Users, color: '#6366F1', bg: 'rgba(99,102,241,0.12)' },
-  { label: 'Monthly Payroll', value: 0, display: 'GHS 0', change: '', icon: CreditCard, color: '#10B981', bg: 'rgba(16,185,129,0.12)' },
-  { label: 'Avg. Salary', value: 0, display: 'GHS 0', change: '', icon: TrendingUp, color: '#F59E0B', bg: 'rgba(245,158,11,0.12)' },
-  { label: 'Payslips Sent', value: 0, display: '0', change: '', icon: FileText, color: '#06B6D4', bg: 'rgba(6,182,212,0.12)' },
-]
-
-const CustomTooltip = ({ active, payload, label }: any) => {
-  if (active && payload && payload.length) {
-    return (
-      <div style={{ background: '#1A1A24', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '8px', padding: '10px 14px' }}>
-        <p style={{ color: '#94A3B8', fontSize: '12px' }}>{label}</p>
-        <p style={{ color: '#F8FAFC', fontWeight: 600 }}>GHS {payload[0].value?.toLocaleString()}</p>
-      </div>
-    )
-  }
-  return null
-}
-
-function StatCard({ stat, index }: { stat: typeof stats[0], index: number }) {
-  const [count, setCount] = useState(0)
-  useEffect(() => {
-    if (!stat.value) return
-    let start = 0
-    const step = stat.value / 40
-    const timer = setInterval(() => {
-      start += step
-      if (start >= stat.value) { setCount(stat.value); clearInterval(timer) }
-      else setCount(Math.floor(start))
-    }, 30)
-    return () => clearInterval(timer)
-  }, [stat.value])
-
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: index * 0.08, duration: 0.4 }}
-      style={{
-        background: 'rgba(255,255,255,0.02)',
-        border: '1px solid rgba(255,255,255,0.06)',
-        borderRadius: '16px',
-        padding: '20px',
-        display: 'flex',
-        flexDirection: 'column',
-        gap: '12px',
-        transition: 'border-color 0.2s ease',
-      }}
-    >
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: stat.bg, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <stat.icon size={18} color={stat.color} />
-        </div>
-        <span style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px', fontWeight: 500, color: '#10B981' }}>
-          <ArrowUpRight size={12} />{stat.change}
-        </span>
-      </div>
-      <div>
-        <p style={{ fontSize: '26px', fontWeight: 700, color: '#F8FAFC', lineHeight: 1.2 }}>
-          {stat.value ? count : stat.display}
-        </p>
-        <p style={{ fontSize: '12px', color: '#475569', marginTop: '4px' }}>{stat.label}</p>
-      </div>
-    </motion.div>
-  )
-}
+import TrialBanner from '@/components/ui/TrialBanner'
+import { getCompanyId, getEmployees } from '@/lib/employees'
+import { supabase } from '@/lib/supabase'
 
 export default function Dashboard() {
+  const { user } = useUser()
+  const [loading, setLoading] = useState(true)
+  const [companyId, setCompanyId] = useState('')
+  const [companyName, setCompanyName] = useState('')
+  const [stats, setStats] = useState({
+    totalEmployees: 0,
+    monthlyPayroll: 0,
+    avgSalary: 0,
+    payslipsSent: 0,
+  })
+  const [trendData, setTrendData] = useState<any[]>([])
+  const [pieData, setPieData] = useState([
+    { name: 'Net Pay', value: 0, color: '#6366F1' },
+    { name: 'PAYE', value: 0, color: '#10B981' },
+    { name: 'SSNIT', value: 0, color: '#F59E0B' },
+    { name: 'Tier 2', value: 0, color: '#06B6D4' },
+  ])
+  const [deptData, setDeptData] = useState<any[]>([])
+
+  useEffect(() => { if (user) loadData() }, [user])
+
+  const loadData = async () => {
+    if (!user) return
+    try {
+      setLoading(true)
+      const cId = await getCompanyId(user.id)
+      if (!cId) return
+      setCompanyId(cId)
+
+      // Get company name
+      const { data: company } = await supabase
+        .from('companies')
+        .select('name')
+        .eq('id', cId)
+        .single()
+      if (company) setCompanyName(company.name)
+
+      // Get employees
+      const employees = await getEmployees(cId)
+      const totalEmployees = employees.filter(e => e.status === 'active').length
+      const avgSalary = totalEmployees > 0
+        ? Math.round(employees.filter(e => e.status === 'active').reduce((s, e) => s + e.basic_salary, 0) / totalEmployees)
+        : 0
+
+      // Get payroll runs
+      const { data: payrollRuns } = await supabase
+        .from('payroll_runs')
+        .select('*')
+        .eq('company_id', cId)
+        .order('created_at', { ascending: false })
+
+      const latestRun = payrollRuns?.[0]
+      const monthlyPayroll = latestRun?.total_gross || 0
+      const payslipsSent = latestRun?.employee_count || 0
+
+      setStats({ totalEmployees, monthlyPayroll, avgSalary, payslipsSent })
+
+      // Build trend data from last 7 payroll runs
+      const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+      const trend = months.map(month => ({ month, amount: 0 }))
+
+      if (payrollRuns && payrollRuns.length > 0) {
+        payrollRuns.slice(0, 7).forEach(run => {
+          const date = new Date(run.created_at)
+          const monthIdx = date.getMonth()
+          trend[monthIdx].amount = run.total_gross || 0
+        })
+      }
+
+      // Only show months with data or last 7 months
+      const now = new Date()
+      const last7 = []
+      for (let i = 6; i >= 0; i--) {
+        const d = new Date(now.getFullYear(), now.getMonth() - i, 1)
+        const monthName = months[d.getMonth()]
+        const run = payrollRuns?.find(r => {
+          const rd = new Date(r.created_at)
+          return rd.getMonth() === d.getMonth() && rd.getFullYear() === d.getFullYear()
+        })
+        last7.push({ month: monthName, amount: run?.total_gross || 0 })
+      }
+      setTrendData(last7)
+
+      // Pie chart from latest payroll run
+      if (latestRun) {
+        const gross = latestRun.total_gross || 0
+        const paye = latestRun.total_paye || 0
+        const ssnit = latestRun.total_ssnit_employee || 0
+        const tier2 = latestRun.total_tier2 || 0
+        const net = latestRun.total_net || 0
+
+        if (gross > 0) {
+          setPieData([
+            { name: 'Net Pay', value: Math.round((net / gross) * 100), color: '#6366F1' },
+            { name: 'PAYE', value: Math.round((paye / gross) * 100), color: '#10B981' },
+            { name: 'SSNIT', value: Math.round((ssnit / gross) * 100), color: '#F59E0B' },
+            { name: 'Tier 2', value: Math.round((tier2 / gross) * 100), color: '#06B6D4' },
+          ])
+        }
+      }
+
+      // Department data from employees
+      const deptMap: Record<string, number> = {}
+      employees.filter(e => e.status === 'active').forEach(emp => {
+        deptMap[emp.department] = (deptMap[emp.department] || 0) + emp.basic_salary
+      })
+      const deptArr = Object.entries(deptMap)
+        .map(([dept, spend]) => ({ dept, spend }))
+        .sort((a, b) => b.spend - a.spend)
+        .slice(0, 5)
+      setDeptData(deptArr)
+
+    } catch (err) {
+      console.error(err)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const fmt = (n: number) => `GHS ${n.toLocaleString('en-GH', { minimumFractionDigits: 0 })}`
+
+  const statCards = [
+    { label: 'Total Employees', value: stats.totalEmployees, display: stats.totalEmployees.toString(), icon: Users, color: '#6366F1', bg: 'rgba(99,102,241,0.12)' },
+    { label: 'Monthly Payroll', value: stats.monthlyPayroll, display: fmt(stats.monthlyPayroll), icon: CreditCard, color: '#10B981', bg: 'rgba(16,185,129,0.12)' },
+    { label: 'Avg. Salary', value: stats.avgSalary, display: fmt(stats.avgSalary), icon: TrendingUp, color: '#F59E0B', bg: 'rgba(245,158,11,0.12)' },
+    { label: 'Payslips Sent', value: stats.payslipsSent, display: stats.payslipsSent.toString(), icon: FileText, color: '#06B6D4', bg: 'rgba(6,182,212,0.12)' },
+  ]
+
+  const hasPayrollData = stats.monthlyPayroll > 0
+
   return (
     <DashboardLayout title="Dashboard">
       <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', width: '100%' }}>
 
-        {/* Row 1: Orb + Stats */}
-        <div className="dashboard-hero" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px', width: '100%' }}>
-          {/* Orb */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.6 }}
-            style={{ position: 'relative', height: '220px', borderRadius: '16px', overflow: 'hidden', background: 'rgba(99,102,241,0.06)', border: '1px solid rgba(99,102,241,0.2)' }}
-          >
-            <div style={{ position: 'absolute', inset: 0 }}><PayrollOrb /></div>
-            <div style={{ position: 'absolute', bottom: '16px', left: '20px', zIndex: 10 }}>
-              <p style={{ fontSize: '11px', fontWeight: 500, color: '#818CF8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Payroll Engine</p>
-              <p style={{ fontSize: '22px', fontWeight: 700, color: '#F8FAFC' }}>Active</p>
-            </div>
-          </motion.div>
-
-          {/* Stats 2-col */}
-          <div className="dashboard-stats" style={{ gridColumn: 'span 2', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-            {stats.map((stat, i) => <StatCard key={stat.label} stat={stat} index={i} />)}
+        {/* Header */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '12px' }}>
+          <div>
+            <h1 style={{ fontSize: '22px', fontWeight: 800, color: '#F8FAFC' }}>
+              {companyName || 'Dashboard'}
+            </h1>
+            <p style={{ fontSize: '13px', color: '#475569', marginTop: '4px' }}>
+              {new Date().toLocaleDateString('en-GH', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
+            </p>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 16px', borderRadius: '10px', background: 'rgba(16,185,129,0.08)', border: '1px solid rgba(16,185,129,0.15)' }}>
+            <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#10B981', animation: 'pulse 2s infinite' }} />
+            <span style={{ fontSize: '12px', color: '#10B981', fontWeight: 600 }}>Payroll Engine Active</span>
           </div>
         </div>
 
-        {/* Row 2: Area chart + Donut */}
-        <div className="dashboard-charts" style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '16px', width: '100%' }}>
-          <motion.div
-            initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3, duration: 0.5 }}
-            style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '16px', padding: '24px' }}
-          >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px' }}>
+        {/* Stat Cards */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px' }} className="stats-grid">
+          {statCards.map((stat, i) => (
+            <motion.div key={stat.label} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.08 }}
+              style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '16px', padding: '20px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+                <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: stat.bg, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <stat.icon size={18} color={stat.color} />
+                </div>
+              </div>
+              <p style={{ fontSize: '24px', fontWeight: 800, color: stat.color, marginBottom: '4px' }}>{stat.display}</p>
+              <p style={{ fontSize: '12px', color: '#475569' }}>{stat.label}</p>
+            </motion.div>
+          ))}
+        </div>
+
+        {/* Charts row */}
+        <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '16px' }} className="charts-grid">
+
+          {/* Payroll Trend */}
+          <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '16px', padding: '24px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
               <div>
-                <h3 style={{ fontWeight: 600, color: '#F8FAFC', fontSize: '15px' }}>Payroll Trend</h3>
+                <p style={{ fontSize: '14px', fontWeight: 600, color: '#F8FAFC' }}>Payroll Trend</p>
                 <p style={{ fontSize: '12px', color: '#475569', marginTop: '2px' }}>Monthly payroll spend (GHS)</p>
               </div>
               <span style={{ fontSize: '11px', padding: '4px 12px', borderRadius: '999px', background: 'rgba(99,102,241,0.1)', color: '#818CF8', border: '1px solid rgba(99,102,241,0.2)' }}>Last 7 months</span>
             </div>
-            <ResponsiveContainer width="100%" height={180}>
-              <AreaChart data={payrollTrend}>
-                <defs>
-                  <linearGradient id="payrollGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#6366F1" stopOpacity={0.3} />
-                    <stop offset="95%" stopColor="#6366F1" stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
-                <XAxis dataKey="month" tick={{ fill: '#475569', fontSize: 12 }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fill: '#475569', fontSize: 12 }} axisLine={false} tickLine={false} tickFormatter={(v) => `${v / 1000}k`} />
-                <Tooltip content={<CustomTooltip />} />
-                <Area type="monotone" dataKey="amount" stroke="#6366F1" strokeWidth={2} fill="url(#payrollGrad)" />
-              </AreaChart>
-            </ResponsiveContainer>
-          </motion.div>
+            {!hasPayrollData ? (
+              <div style={{ height: '180px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: '8px' }}>
+                <p style={{ color: '#475569', fontSize: '14px', fontWeight: 600 }}>No payroll data yet</p>
+                <p style={{ color: '#334155', fontSize: '12px' }}>Run your first payroll to see the trend</p>
+              </div>
+            ) : (
+              <ResponsiveContainer width="100%" height={180}>
+                <AreaChart data={trendData}>
+                  <defs>
+                    <linearGradient id="payrollGrad" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#6366F1" stopOpacity={0.3} />
+                      <stop offset="95%" stopColor="#6366F1" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <XAxis dataKey="month" tick={{ fill: '#475569', fontSize: 12 }} axisLine={false} tickLine={false} />
+                  <YAxis tick={{ fill: '#475569', fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={v => `${v/1000}k`} />
+                  <Tooltip formatter={(v: any) => [`GHS ${v.toLocaleString()}`, 'Payroll']} contentStyle={{ background: '#1A1A24', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '8px', color: '#F8FAFC' }} />
+                  <Area type="monotone" dataKey="amount" stroke="#6366F1" strokeWidth={2} fill="url(#payrollGrad)" />
+                </AreaChart>
+              </ResponsiveContainer>
+            )}
+          </div>
 
-          <motion.div
-            initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4, duration: 0.5 }}
-            style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '16px', padding: '24px' }}
-          >
-            <h3 style={{ fontWeight: 600, color: '#F8FAFC', fontSize: '15px' }}>Pay Breakdown</h3>
-            <p style={{ fontSize: '12px', color: '#475569', marginTop: '2px', marginBottom: '16px' }}>Deductions vs net pay</p>
-            <ResponsiveContainer width="100%" height={140}>
-              <PieChart>
-                <Pie data={deductionData} cx="50%" cy="50%" innerRadius={40} outerRadius={65} paddingAngle={3} dataKey="value">
-                  {deductionData.map((entry, index) => <Cell key={index} fill={entry.color} />)}
-                </Pie>
-                <Tooltip formatter={(v) => `${v}%`} contentStyle={{ background: '#1A1A24', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '8px', color: '#F8FAFC' }} />
-              </PieChart>
-            </ResponsiveContainer>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '8px' }}>
-              {deductionData.map((item) => (
-                <div key={item.name} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: item.color }} />
-                    <span style={{ fontSize: '12px', color: '#94A3B8' }}>{item.name}</span>
-                  </div>
-                  <span style={{ fontSize: '12px', fontWeight: 600, color: '#F8FAFC' }}>{item.value}%</span>
+          {/* Pay Breakdown Pie */}
+          <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '16px', padding: '24px' }}>
+            <p style={{ fontSize: '14px', fontWeight: 600, color: '#F8FAFC', marginBottom: '4px' }}>Pay Breakdown</p>
+            <p style={{ fontSize: '12px', color: '#475569', marginBottom: '16px' }}>Deductions vs net pay</p>
+            {!hasPayrollData ? (
+              <div style={{ height: '160px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: '8px' }}>
+                <p style={{ color: '#475569', fontSize: '13px', textAlign: 'center' }}>Run payroll to see breakdown</p>
+              </div>
+            ) : (
+              <>
+                <ResponsiveContainer width="100%" height={140}>
+                  <PieChart>
+                    <Pie data={pieData} cx="50%" cy="50%" innerRadius={40} outerRadius={65} paddingAngle={3} dataKey="value">
+                      {pieData.map((entry, i) => <Cell key={i} fill={entry.color} />)}
+                    </Pie>
+                    <Tooltip formatter={(v: any) => [`${v}%`]} contentStyle={{ background: '#1A1A24', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '8px', color: '#F8FAFC' }} />
+                  </PieChart>
+                </ResponsiveContainer>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                  {pieData.map(item => (
+                    <div key={item.name} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: item.color }} />
+                        <span style={{ fontSize: '11px', color: '#94A3B8' }}>{item.name}</span>
+                      </div>
+                      <span style={{ fontSize: '11px', color: item.color, fontWeight: 600 }}>{item.value}%</span>
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
-          </motion.div>
+              </>
+            )}
+          </div>
         </div>
 
         {/* Compliance Alerts */}
         <ComplianceAlerts />
 
-        {/* Row 3: Bar chart */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5, duration: 0.5 }}
-          style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '16px', padding: '24px', width: '100%' }}
-        >
-          <h3 style={{ fontWeight: 600, color: '#F8FAFC', fontSize: '15px' }}>Payroll by Department</h3>
+        {/* Payroll by Department */}
+        <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '16px', padding: '24px', width: '100%' }}>
+          <p style={{ fontSize: '14px', fontWeight: 600, color: '#F8FAFC', marginBottom: '4px' }}>Payroll by Department</p>
           <p style={{ fontSize: '12px', color: '#475569', marginTop: '2px', marginBottom: '24px' }}>This month's spend per department</p>
-          <ResponsiveContainer width="100%" height={160}>
-            <BarChart data={deptData} barSize={32}>
-              <defs>
-                <linearGradient id="barGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#6366F1" />
-                  <stop offset="100%" stopColor="#818CF8" />
-                </linearGradient>
-              </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" vertical={false} />
-              <XAxis dataKey="dept" tick={{ fill: '#475569', fontSize: 12 }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fill: '#475569', fontSize: 12 }} axisLine={false} tickLine={false} tickFormatter={(v) => `${v / 1000}k`} />
-              <Tooltip content={<CustomTooltip />} />
-              <Bar dataKey="spend" fill="url(#barGrad)" radius={[6, 6, 0, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
-        </motion.div>
+          {deptData.length === 0 ? (
+            <div style={{ height: '120px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: '8px' }}>
+              <p style={{ color: '#475569', fontSize: '14px', fontWeight: 600 }}>No employees added yet</p>
+              <p style={{ color: '#334155', fontSize: '12px' }}>Add employees to see department breakdown</p>
+            </div>
+          ) : (
+            <ResponsiveContainer width="100%" height={200}>
+              <BarChart data={deptData} barSize={32}>
+                <defs>
+                  <linearGradient id="barGrad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#6366F1" />
+                    <stop offset="100%" stopColor="#818CF8" />
+                  </linearGradient>
+                </defs>
+                <XAxis dataKey="dept" tick={{ fill: '#475569', fontSize: 12 }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fill: '#475569', fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={v => `${v/1000}k`} />
+                <Tooltip formatter={(v: any) => [`GHS ${v.toLocaleString()}`, 'Salary']} contentStyle={{ background: '#1A1A24', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '8px', color: '#F8FAFC' }} />
+                <Bar dataKey="spend" fill="url(#barGrad)" radius={[6, 6, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          )}
+        </div>
 
       </div>
       <style>{`
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
         @media (max-width: 768px) {
-          .dashboard-hero { grid-template-columns: 1fr !important; }
-          .dashboard-stats { grid-column: span 1 !important; grid-template-columns: 1fr 1fr !important; }
-          .dashboard-charts { grid-template-columns: 1fr !important; }
+          .stats-grid { grid-template-columns: 1fr 1fr !important; }
+          .charts-grid { grid-template-columns: 1fr !important; }
         }
         @media (max-width: 480px) {
-          .dashboard-stats { grid-template-columns: 1fr !important; }
+          .stats-grid { grid-template-columns: 1fr !important; }
         }
       `}</style>
     </DashboardLayout>
