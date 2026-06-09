@@ -1,4 +1,5 @@
 'use client'
+import { useUser } from '@clerk/nextjs'
 import DashboardLayout from '@/components/layout/DashboardLayout'
 import { motion } from 'framer-motion'
 import { useState, useEffect } from 'react'
@@ -22,6 +23,7 @@ const emptyForm = {
 
 export default function EmployeesPage() {
   const [employees, setEmployees] = useState<Employee[]>([])
+  const { user } = useUser()
   const [loading, setLoading] = useState(true)
   const [companyId, setCompanyId] = useState('')
   const [search, setSearch] = useState('')
@@ -39,11 +41,11 @@ export default function EmployeesPage() {
   const loadData = async () => {
     try {
       setLoading(true)
-      const cId = await getCompanyId()
+      const cId = await getCompanyId(user?.id)
       setCompanyId(cId)
       const emps = await getEmployees(cId)
       if (emps.length === 0) {
-        await seedDemoEmployees(cId)
+        // Demo seeding disabled - new companies start fresh
         const seeded = await getEmployees(cId)
         setEmployees(seeded)
       } else {

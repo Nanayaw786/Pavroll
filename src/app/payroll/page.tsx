@@ -1,4 +1,5 @@
 'use client'
+import { useUser } from '@clerk/nextjs'
 import DashboardLayout from '@/components/layout/DashboardLayout'
 import { motion } from 'framer-motion'
 import { useState, useEffect } from 'react'
@@ -29,6 +30,7 @@ export default function PayrollPage() {
   const [selectedMonth, setSelectedMonth] = useState(currentMonth)
   const [selectedYear] = useState(currentYear)
   const [running, setRunning] = useState(false)
+  const { user } = useUser()
   const [loading, setLoading] = useState(true)
   const [expanded, setExpanded] = useState<string | null>(null)
 
@@ -37,7 +39,7 @@ export default function PayrollPage() {
   const loadData = async () => {
     try {
       setLoading(true)
-      const cId = await getCompanyId()
+      const cId = await getCompanyId(user?.id)
       setCompanyId(cId)
       const { data: companyData } = await supabase.from('companies').select('payroll_settings').eq('id', cId).single()
       if (companyData?.payroll_settings) {

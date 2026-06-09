@@ -2,6 +2,7 @@
 import DashboardLayout from '@/components/layout/DashboardLayout'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useState, useEffect } from 'react'
+import { useUser } from '@clerk/nextjs'
 import { Settings, MessageSquare, CheckCircle, Clock, XCircle, Plus, Loader2, Building2, Bell, CreditCard } from 'lucide-react'
 
 import { getSenderIdRequests, createSenderIdRequest, type SenderIdRequest } from '@/lib/senderIdDb'
@@ -21,6 +22,7 @@ const plans = [
 ]
 
 export default function SettingsPage() {
+  const { user } = useUser()
   const [companyId, setCompanyId] = useState('')
   const [company, setCompany] = useState<any>(null)
   const [requests, setRequests] = useState<SenderIdRequest[]>([])
@@ -86,7 +88,7 @@ export default function SettingsPage() {
   const loadData = async () => {
     try {
       setLoading(true)
-      const cId = await getCompanyId()
+      const cId = await getCompanyId(user?.id)
       setCompanyId(cId)
       const { data: companyData } = await supabase.from('companies').select('*').eq('id', cId).single()
       if (companyData) {

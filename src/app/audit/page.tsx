@@ -1,4 +1,5 @@
 'use client'
+import { useUser } from '@clerk/nextjs'
 import DashboardLayout from '@/components/layout/DashboardLayout'
 import { motion } from 'framer-motion'
 import { useState, useEffect } from 'react'
@@ -25,6 +26,7 @@ const severityConfig = {
 
 export default function AuditPage() {
   const [logs, setLogs] = useState<AuditLog[]>([])
+  const { user } = useUser()
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
   const [moduleFilter, setModuleFilter] = useState<string>('all')
@@ -35,7 +37,7 @@ export default function AuditPage() {
   const loadData = async () => {
     try {
       setLoading(true)
-      const cId = await getCompanyId()
+      const cId = await getCompanyId(user?.id)
       const data = await getAuditLogs(cId)
       setLogs(data)
     } catch (err) {

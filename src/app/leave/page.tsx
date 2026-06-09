@@ -1,4 +1,5 @@
 'use client'
+import { useUser } from '@clerk/nextjs'
 import DashboardLayout from '@/components/layout/DashboardLayout'
 import { motion } from 'framer-motion'
 import { useState, useEffect } from 'react'
@@ -27,6 +28,7 @@ export default function LeavePage() {
   const [companyId, setCompanyId] = useState('')
   const [leaves, setLeaves] = useState<LeaveRequest[]>([])
   const [employees, setEmployees] = useState<Employee[]>([])
+  const { user } = useUser()
   const [loading, setLoading] = useState(true)
   const [tab, setTab] = useState<'requests' | 'balances'>('requests')
   const [filter, setFilter] = useState<'all' | LeaveStatus>('all')
@@ -39,7 +41,7 @@ export default function LeavePage() {
   const loadData = async () => {
     try {
       setLoading(true)
-      const cId = await getCompanyId()
+      const cId = await getCompanyId(user?.id)
       setCompanyId(cId)
       const [leaveData, empData] = await Promise.all([
         getLeaveRequests(cId),

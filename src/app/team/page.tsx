@@ -46,7 +46,7 @@ export default function TeamPage() {
     if (!user) return
     try {
       setLoading(true)
-      const cId = await getCompanyId()
+      const cId = await getCompanyId(user?.id)
       setCompanyId(cId)
       const { data: company } = await supabase.from('companies').select('name').eq('id', cId).single()
       if (company) setCompanyName(company.name)

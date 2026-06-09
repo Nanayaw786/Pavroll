@@ -1,4 +1,5 @@
 'use client'
+import { useUser } from '@clerk/nextjs'
 import DashboardLayout from '@/components/layout/DashboardLayout'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useState, useEffect } from 'react'
@@ -23,6 +24,7 @@ function getInitials(name: string) {
 export default function SMSPage() {
   const [employees, setEmployees] = useState<Employee[]>([])
   const [companyId, setCompanyId] = useState('')
+  const { user } = useUser()
   const [loading, setLoading] = useState(true)
   const [sending, setSending] = useState(false)
   const [logs, setLogs] = useState<SMSLog[]>([])
@@ -41,7 +43,7 @@ export default function SMSPage() {
 
   const loadData = async () => {
     try {
-      const cId = await getCompanyId()
+      const cId = await getCompanyId(user?.id)
       setCompanyId(cId)
       const emps = await getEmployees(cId)
       setEmployees(emps.filter(e => e.status === 'active'))
