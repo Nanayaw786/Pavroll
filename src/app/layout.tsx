@@ -11,6 +11,11 @@ export const metadata: Metadata = {
   verification: {
     google: 'WhsYgi4EMJOEEW7Krad36vb23FCWcETkmuA5Qeym3I8',
   },
+  icons: {
+    icon: '/favicon.svg',
+    shortcut: '/favicon.svg',
+    apple: '/favicon.svg',
+  },
   openGraph: {
     title: 'Pavroll — Ghana HR & Payroll Software',
     description: 'Ghana GRA 2026 compliant payroll for SMEs. Auto-calculate PAYE, SSNIT & Tier 2. Starting at GHS 120/month.',
