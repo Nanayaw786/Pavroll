@@ -398,7 +398,7 @@ export default function OnboardingPage() {
         {step === 5 && (
           <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }}
             style={{ textAlign: 'center', marginTop: '16px', fontSize: '13px', color: '#475569' }}>
-            <span onClick={handleSubmit} style={{ color: '#6366F1', cursor: 'pointer', textDecoration: 'underline' }}>
+            <span onClick={() => { setSaving(true); handleSubmit() }} style={{ color: '#6366F1', cursor: 'pointer', textDecoration: 'underline' }}>
               Skip and go to dashboard →
             </span>
           </motion.p>
