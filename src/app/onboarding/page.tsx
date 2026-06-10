@@ -122,70 +122,77 @@ export default function OnboardingPage() {
   const handleSubmit = async () => {
     if (!user) return
     setSaving(true)
+    setError('')
     try {
       const userEmail = form.email || user.primaryEmailAddress?.emailAddress || ''
-      const userName = form.name || user.fullName || user.firstName || 'My Company'
+      const userName = form.name || user.fullName || `${user.firstName || 'My'} Company`
 
-      // Create or get company
+      // Get or create company
       let cId = await getCompanyId(user.id)
       if (!cId) {
         cId = await createCompanyForUser(user.id, userEmail, userName)
       }
 
-      if (!cId) throw new Error('Failed to create company')
-      
-      // Update with whatever info we have
-      form.email = userEmail
-      form.name = userName
+      if (!cId) {
+        setError('Could not create your account. Please try again.')
+        setSaving(false)
+        return
+      }
 
-      // Update company with full onboarding info
-      await supabase.from('companies').update({
-        name: form.name.trim(),
-        email: form.email.trim(),
-        phone: form.phone.trim(),
-        tin: form.tin.trim(),
-        address: form.address.trim(),
-        business_type: form.business_type,
-        lead_source: form.lead_source,
-        lead_source_detail: form.lead_source_detail,
-      }).eq('id', cId)
+      // Update company with onboarding info
+      const updates: any = {
+        name: userName,
+        email: userEmail,
+      }
+      if (form.phone) updates.phone = form.phone
+      if (form.tin) updates.tin = form.tin
+      if (form.address) updates.address = form.address
+      if (form.business_type) updates.business_type = form.business_type
+      if (form.lead_source) updates.lead_source = form.lead_source
+      if (form.lead_source_detail) updates.lead_source_detail = form.lead_source_detail
+
+      await supabase.from('companies').update(updates).eq('id', cId)
 
       // Apply referral code if provided
       if (form.referral_code.trim()) {
-        const { data: partner } = await supabase
-          .from('referral_partners')
-          .select('id, commission_rate, total_referrals')
-          .eq('code', form.referral_code.toUpperCase())
-          .eq('is_active', true)
-          .single()
+        try {
+          const { data: partner } = await supabase
+            .from('referral_partners')
+            .select('id, commission_rate, total_referrals')
+            .eq('code', form.referral_code.toUpperCase())
+            .eq('is_active', true)
+            .maybeSingle()
 
-        if (partner) {
-          await supabase.from('companies').update({
-            referral_code: form.referral_code.toUpperCase(),
-            partner_id: partner.id,
-          }).eq('id', cId)
+          if (partner) {
+            await supabase.from('companies').update({
+              referral_code: form.referral_code.toUpperCase(),
+              partner_id: partner.id,
+            }).eq('id', cId)
 
-          await supabase.from('referrals').insert({
-            partner_id: partner.id,
-            company_id: cId,
-            company_name: form.name,
-            plan: 'trial',
-            monthly_fee: 0,
-            commission: 0,
-            status: 'trial',
-          })
+            await supabase.from('referrals').insert({
+              partner_id: partner.id,
+              company_id: cId,
+              company_name: userName,
+              plan: 'trial',
+              monthly_fee: 0,
+              commission: 0,
+              status: 'trial',
+            })
 
-          await supabase.from('referral_partners').update({
-            total_referrals: partner.total_referrals + 1,
-          }).eq('id', partner.id)
+            await supabase.from('referral_partners').update({
+              total_referrals: (partner.total_referrals || 0) + 1,
+            }).eq('id', partner.id)
+          }
+        } catch (refErr) {
+          console.error('Referral error:', refErr)
+          // Don't block onboarding for referral errors
         }
       }
 
       router.push('/dashboard')
     } catch (err) {
-      console.error(err)
+      console.error('Onboarding error:', err)
       setError('Something went wrong. Please try again.')
-    } finally {
       setSaving(false)
     }
   }
