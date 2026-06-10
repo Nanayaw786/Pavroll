@@ -123,13 +123,20 @@ export default function OnboardingPage() {
     if (!user) return
     setSaving(true)
     try {
+      const userEmail = form.email || user.primaryEmailAddress?.emailAddress || ''
+      const userName = form.name || user.fullName || user.firstName || 'My Company'
+
       // Create or get company
       let cId = await getCompanyId(user.id)
       if (!cId) {
-        cId = await createCompanyForUser(user.id, form.email, form.name)
+        cId = await createCompanyForUser(user.id, userEmail, userName)
       }
 
       if (!cId) throw new Error('Failed to create company')
+      
+      // Update with whatever info we have
+      form.email = userEmail
+      form.name = userName
 
       // Update company with full onboarding info
       await supabase.from('companies').update({
