@@ -93,7 +93,8 @@ export default function OnboardingPage() {
       if (cId) {
         const { data } = await supabase.from('companies').select('name').eq('id', cId).single()
         if (data?.name && !data.name.includes("'s Company") && !data.name.includes('My Company')) {
-          router.push('/dashboard')
+          sessionStorage.setItem('onboarding_checked', 'true')
+      router.push('/dashboard')
         }
       }
     }
@@ -189,6 +190,7 @@ export default function OnboardingPage() {
         }
       }
 
+      sessionStorage.setItem('onboarding_checked', 'true')
       router.push('/dashboard')
     } catch (err) {
       console.error('Onboarding error:', err)
