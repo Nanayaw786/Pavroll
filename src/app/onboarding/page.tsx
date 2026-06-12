@@ -129,13 +129,10 @@ export default function OnboardingPage() {
       const userName = form.name || user.fullName || `${user.firstName || 'My'} Company`
 
       // Get or create company
-      let cId = await getCompanyId(user.id)
-      if (!cId) {
-        cId = await createCompanyForUser(user.id, userEmail, userName)
-      }
+      const cId = await getCompanyId(user.id)
 
       if (!cId) {
-        setError('Could not create your account. Please try again.')
+        setError('Could not find your account. Please refresh and try again.')
         setSaving(false)
         return
       }
