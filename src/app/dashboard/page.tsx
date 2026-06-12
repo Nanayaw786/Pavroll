@@ -48,18 +48,6 @@ export default function Dashboard() {
       }
       if (!cId) { router.push('/onboarding'); return }
 
-      // Check onboarding status
-      const { data: co } = await supabase
-        .from('companies')
-        .select('onboarding_completed')
-        .eq('id', cId)
-        .single()
-
-      if (!co?.onboarding_completed) {
-        router.replace('/onboarding')
-        return
-      }
-
       setCompanyId(cId)
       setReady(true)
       loadDashboard(cId)
