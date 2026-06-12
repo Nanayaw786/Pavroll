@@ -2,6 +2,7 @@
 import { motion, AnimatePresence } from 'framer-motion'
 import { useState, useEffect } from 'react'
 import { useUser, useClerk } from '@clerk/nextjs'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import {
   Zap, Building2, Users, CreditCard, MessageSquare, BarChart3,
@@ -339,8 +340,33 @@ function LeadSourceChart({ companies }: { companies: any[] }) {
   )
 }
 
+const SUPER_ADMIN_EMAILS = [
+  'samuelannanemensah@gmail.com',
+  'hello.pavroll@proton.me',
+]
+
 export default function SuperAdminPage() {
   const { user } = useUser()
+  const router = useRouter()
+
+  // Protect super admin
+  useEffect(() => {
+    if (user && !SUPER_ADMIN_EMAILS.includes(user.primaryEmailAddress?.emailAddress || '')) {
+      router.replace('/dashboard')
+    }
+  }, [user])
+
+  if (!user || !SUPER_ADMIN_EMAILS.includes(user.primaryEmailAddress?.emailAddress || '')) {
+    return (
+      <div style={{ minHeight: '100vh', background: '#0A0A0F', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ textAlign: 'center', color: '#475569' }}>
+          <Shield size={40} style={{ margin: '0 auto 16px' }} />
+          <p style={{ fontSize: '16px', fontWeight: 600, color: '#F8FAFC' }}>Access Denied</p>
+          <p style={{ fontSize: '13px', marginTop: '8px' }}>You don't have permission to view this page.</p>
+        </div>
+      </div>
+    )
+  }
   const { signOut } = useClerk()
   const [tab, setTab] = useState('overview')
   const [companies, setCompanies] = useState<Company[]>([])
