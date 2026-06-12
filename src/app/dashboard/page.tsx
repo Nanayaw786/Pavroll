@@ -177,7 +177,7 @@ export default function Dashboard() {
           </div>
           <div style={{ width: '24px', height: '24px', border: '3px solid #6366F1', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
         </div>
-        <style>{String.raw\`@keyframes spin { to { transform: rotate(360deg); } }\`}</style>
+        <style>{'@keyframes spin { to { transform: rotate(360deg); } }'}</style>
       </div>
     )
   }
