@@ -52,7 +52,7 @@ export default function Dashboard() {
         return
       }
 
-      // Check if onboarding completed
+      // Check if onboarding completed BEFORE loading anything
       const { data: co } = await supabase
         .from('companies')
         .select('name, phone, onboarding_completed')
@@ -60,7 +60,7 @@ export default function Dashboard() {
         .single()
 
       if (!co?.onboarding_completed) {
-        router.push('/onboarding')
+        router.replace('/onboarding')
         return
       }
       
@@ -167,6 +167,20 @@ export default function Dashboard() {
   ]
 
   const hasPayrollData = stats.monthlyPayroll > 0
+
+  if (loading) {
+    return (
+      <div style={{ minHeight: '100vh', background: '#0A0A0F', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px' }}>
+          <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: '#6366F1', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <span style={{ color: 'white', fontWeight: 800, fontSize: '20px' }}>P</span>
+          </div>
+          <div style={{ width: '24px', height: '24px', border: '3px solid #6366F1', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+        </div>
+        <style>{String.raw\`@keyframes spin { to { transform: rotate(360deg); } }\`}</style>
+      </div>
+    )
+  }
 
   return (
     <DashboardLayout title="Dashboard">
