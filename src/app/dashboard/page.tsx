@@ -1,28 +1,21 @@
 'use client'
 import DashboardLayout from '@/components/layout/DashboardLayout'
-import { motion } from 'framer-motion'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useUser } from '@clerk/nextjs'
 import { useRouter } from 'next/navigation'
 import { Users, CreditCard, TrendingUp, FileText } from 'lucide-react'
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar } from 'recharts'
 import ComplianceAlerts from '@/components/ui/ComplianceAlerts'
-import TrialBanner from '@/components/ui/TrialBanner'
-import { getCompanyId, getEmployees } from '@/lib/employees'
+import { getCompanyId, getEmployees, createCompanyForUser } from '@/lib/employees'
 import { supabase } from '@/lib/supabase'
 
 export default function Dashboard() {
-  const { user } = useUser()
+  const { user, isLoaded } = useUser()
   const router = useRouter()
-  const [loading, setLoading] = useState(true)
+  const [ready, setReady] = useState(false)
   const [companyId, setCompanyId] = useState('')
   const [companyName, setCompanyName] = useState('')
-  const [stats, setStats] = useState({
-    totalEmployees: 0,
-    monthlyPayroll: 0,
-    avgSalary: 0,
-    payslipsSent: 0,
-  })
+  const [stats, setStats] = useState({ totalEmployees: 0, monthlyPayroll: 0, avgSalary: 0, payslipsSent: 0 })
   const [trendData, setTrendData] = useState<any[]>([])
   const [pieData, setPieData] = useState([
     { name: 'Net Pay', value: 0, color: '#6366F1' },
@@ -31,31 +24,34 @@ export default function Dashboard() {
     { name: 'Tier 2', value: 0, color: '#06B6D4' },
   ])
   const [deptData, setDeptData] = useState<any[]>([])
+  const checkedRef = useRef(false)
 
-  useEffect(() => { if (user) loadData() }, [user])
+  useEffect(() => {
+    if (!isLoaded) return
+    if (!user) { router.push('/sign-in'); return }
+    if (checkedRef.current) return
+    checkedRef.current = true
+    checkOnboarding()
+  }, [isLoaded, user])
 
-  const loadData = async () => {
+  const checkOnboarding = async () => {
     if (!user) return
     try {
-      setLoading(true)
+      // Get or create company
       let cId = await getCompanyId(user.id)
-      
       if (!cId) {
-        // Brand new user - create company and send to onboarding
-        const { createCompanyForUser } = await import('@/lib/employees')
         cId = await createCompanyForUser(
           user.id,
           user.primaryEmailAddress?.emailAddress || '',
           user.fullName || user.firstName || 'Admin'
         )
-        router.push('/onboarding')
-        return
       }
+      if (!cId) { router.push('/onboarding'); return }
 
-      // Check if onboarding completed BEFORE loading anything
+      // Check onboarding status
       const { data: co } = await supabase
         .from('companies')
-        .select('name, phone, onboarding_completed')
+        .select('onboarding_completed')
         .eq('id', cId)
         .single()
 
@@ -63,150 +59,103 @@ export default function Dashboard() {
         router.replace('/onboarding')
         return
       }
-      
-      if (!cId) return
-      setCompanyId(cId)
 
-      // Get company name
-      const { data: company } = await supabase
-        .from('companies')
-        .select('name')
-        .eq('id', cId)
-        .single()
+      setCompanyId(cId)
+      setReady(true)
+      loadDashboard(cId)
+    } catch (err) {
+      console.error(err)
+      router.push('/onboarding')
+    }
+  }
+
+  const loadDashboard = async (cId: string) => {
+    try {
+      const { data: company } = await supabase.from('companies').select('name').eq('id', cId).single()
       if (company) setCompanyName(company.name)
 
-      // Get employees
       const employees = await getEmployees(cId)
-      const totalEmployees = employees.filter(e => e.status === 'active').length
-      const avgSalary = totalEmployees > 0
-        ? Math.round(employees.filter(e => e.status === 'active').reduce((s, e) => s + e.basic_salary, 0) / totalEmployees)
-        : 0
+      const active = employees.filter(e => e.status === 'active')
+      const totalEmployees = active.length
+      const avgSalary = totalEmployees > 0 ? Math.round(active.reduce((s, e) => s + e.basic_salary, 0) / totalEmployees) : 0
 
-      // Get payroll runs
-      const { data: payrollRuns } = await supabase
-        .from('payroll_runs')
-        .select('*')
-        .eq('company_id', cId)
-        .order('created_at', { ascending: false })
-
-      const latestRun = payrollRuns?.[0]
-      const monthlyPayroll = latestRun?.total_gross || 0
-      const payslipsSent = latestRun?.employee_count || 0
-
+      const { data: runs } = await supabase.from('payroll_runs').select('*').eq('company_id', cId).order('created_at', { ascending: false })
+      const latest = runs?.[0]
+      const monthlyPayroll = latest?.total_gross || 0
+      const payslipsSent = latest?.employee_count || 0
       setStats({ totalEmployees, monthlyPayroll, avgSalary, payslipsSent })
 
-      // Build trend data from last 7 payroll runs
-      const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
-      const trend = months.map(month => ({ month, amount: 0 }))
-
-      if (payrollRuns && payrollRuns.length > 0) {
-        payrollRuns.slice(0, 7).forEach(run => {
-          const date = new Date(run.created_at)
-          const monthIdx = date.getMonth()
-          trend[monthIdx].amount = run.total_gross || 0
-        })
-      }
-
-      // Only show months with data or last 7 months
+      const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
       const now = new Date()
       const last7 = []
       for (let i = 6; i >= 0; i--) {
         const d = new Date(now.getFullYear(), now.getMonth() - i, 1)
-        const monthName = months[d.getMonth()]
-        const run = payrollRuns?.find(r => {
-          const rd = new Date(r.created_at)
-          return rd.getMonth() === d.getMonth() && rd.getFullYear() === d.getFullYear()
-        })
-        last7.push({ month: monthName, amount: run?.total_gross || 0 })
+        const run = runs?.find(r => { const rd = new Date(r.created_at); return rd.getMonth() === d.getMonth() && rd.getFullYear() === d.getFullYear() })
+        last7.push({ month: months[d.getMonth()], amount: run?.total_gross || 0 })
       }
       setTrendData(last7)
 
-      // Pie chart from latest payroll run
-      if (latestRun) {
-        const gross = latestRun.total_gross || 0
-        const paye = latestRun.total_paye || 0
-        const ssnit = latestRun.total_ssnit_employee || 0
-        const tier2 = latestRun.total_tier2 || 0
-        const net = latestRun.total_net || 0
-
-        if (gross > 0) {
-          setPieData([
-            { name: 'Net Pay', value: Math.round((net / gross) * 100), color: '#6366F1' },
-            { name: 'PAYE', value: Math.round((paye / gross) * 100), color: '#10B981' },
-            { name: 'SSNIT', value: Math.round((ssnit / gross) * 100), color: '#F59E0B' },
-            { name: 'Tier 2', value: Math.round((tier2 / gross) * 100), color: '#06B6D4' },
-          ])
-        }
+      if (latest && latest.total_gross > 0) {
+        const g = latest.total_gross
+        setPieData([
+          { name: 'Net Pay', value: Math.round(((latest.total_net||0)/g)*100), color: '#6366F1' },
+          { name: 'PAYE', value: Math.round(((latest.total_paye||0)/g)*100), color: '#10B981' },
+          { name: 'SSNIT', value: Math.round(((latest.total_ssnit_employee||0)/g)*100), color: '#F59E0B' },
+          { name: 'Tier 2', value: Math.round(((latest.total_tier2||0)/g)*100), color: '#06B6D4' },
+        ])
       }
 
-      // Department data from employees
       const deptMap: Record<string, number> = {}
-      employees.filter(e => e.status === 'active').forEach(emp => {
-        deptMap[emp.department] = (deptMap[emp.department] || 0) + emp.basic_salary
-      })
-      const deptArr = Object.entries(deptMap)
-        .map(([dept, spend]) => ({ dept, spend }))
-        .sort((a, b) => b.spend - a.spend)
-        .slice(0, 5)
-      setDeptData(deptArr)
-
+      active.forEach(emp => { deptMap[emp.department] = (deptMap[emp.department]||0) + emp.basic_salary })
+      setDeptData(Object.entries(deptMap).map(([dept, spend]) => ({ dept, spend })).sort((a,b) => b.spend - a.spend).slice(0, 5))
     } catch (err) {
       console.error(err)
-    } finally {
-      setLoading(false)
     }
   }
 
   const fmt = (n: number) => `GHS ${n.toLocaleString('en-GH', { minimumFractionDigits: 0 })}`
 
-  const statCards = [
-    { label: 'Total Employees', value: stats.totalEmployees, display: stats.totalEmployees.toString(), icon: Users, color: '#6366F1', bg: 'rgba(99,102,241,0.12)' },
-    { label: 'Monthly Payroll', value: stats.monthlyPayroll, display: fmt(stats.monthlyPayroll), icon: CreditCard, color: '#10B981', bg: 'rgba(16,185,129,0.12)' },
-    { label: 'Avg. Salary', value: stats.avgSalary, display: fmt(stats.avgSalary), icon: TrendingUp, color: '#F59E0B', bg: 'rgba(245,158,11,0.12)' },
-    { label: 'Payslips Sent', value: stats.payslipsSent, display: stats.payslipsSent.toString(), icon: FileText, color: '#06B6D4', bg: 'rgba(6,182,212,0.12)' },
-  ]
-
-  const hasPayrollData = stats.monthlyPayroll > 0
-
-  if (loading) {
+  // Show nothing until ready — prevents flash
+  if (!ready) {
     return (
       <div style={{ minHeight: '100vh', background: '#0A0A0F', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px' }}>
-          <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: '#6366F1', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <span style={{ color: 'white', fontWeight: 800, fontSize: '20px' }}>P</span>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '20px' }}>
+          <div style={{ width: '48px', height: '48px', borderRadius: '12px', background: '#6366F1', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <span style={{ color: 'white', fontWeight: 900, fontSize: '24px' }}>P</span>
           </div>
-          <div style={{ width: '24px', height: '24px', border: '3px solid #6366F1', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+          <div style={{ width: '28px', height: '28px', border: '3px solid #6366F1', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
         </div>
         <style>{'@keyframes spin { to { transform: rotate(360deg); } }'}</style>
       </div>
     )
   }
 
+  const statCards = [
+    { label: 'Total Employees', display: stats.totalEmployees.toString(), icon: Users, color: '#6366F1', bg: 'rgba(99,102,241,0.12)' },
+    { label: 'Monthly Payroll', display: fmt(stats.monthlyPayroll), icon: CreditCard, color: '#10B981', bg: 'rgba(16,185,129,0.12)' },
+    { label: 'Avg. Salary', display: fmt(stats.avgSalary), icon: TrendingUp, color: '#F59E0B', bg: 'rgba(245,158,11,0.12)' },
+    { label: 'Payslips Sent', display: stats.payslipsSent.toString(), icon: FileText, color: '#06B6D4', bg: 'rgba(6,182,212,0.12)' },
+  ]
+
+  const hasPayrollData = stats.monthlyPayroll > 0
+
   return (
     <DashboardLayout title="Dashboard">
       <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', width: '100%' }}>
-
-        {/* Header */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '12px' }}>
           <div>
-            <h1 style={{ fontSize: '22px', fontWeight: 800, color: '#F8FAFC' }}>
-              {companyName || 'Dashboard'}
-            </h1>
-            <p style={{ fontSize: '13px', color: '#475569', marginTop: '4px' }}>
-              {new Date().toLocaleDateString('en-GH', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
-            </p>
+            <h1 style={{ fontSize: '22px', fontWeight: 800, color: '#F8FAFC' }}>{companyName || 'Dashboard'}</h1>
+            <p style={{ fontSize: '13px', color: '#475569', marginTop: '4px' }}>{new Date().toLocaleDateString('en-GH', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}</p>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 16px', borderRadius: '10px', background: 'rgba(16,185,129,0.08)', border: '1px solid rgba(16,185,129,0.15)' }}>
-            <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#10B981', animation: 'pulse 2s infinite' }} />
+            <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#10B981' }} />
             <span style={{ fontSize: '12px', color: '#10B981', fontWeight: 600 }}>Payroll Engine Active</span>
           </div>
         </div>
 
-        {/* Stat Cards */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px' }} className="stats-grid">
           {statCards.map((stat, i) => (
-            <motion.div key={stat.label} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.08 }}
-              style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '16px', padding: '20px' }}>
+            <div key={stat.label} style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '16px', padding: '20px' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
                 <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: stat.bg, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <stat.icon size={18} color={stat.color} />
@@ -214,21 +163,17 @@ export default function Dashboard() {
               </div>
               <p style={{ fontSize: '24px', fontWeight: 800, color: stat.color, marginBottom: '4px' }}>{stat.display}</p>
               <p style={{ fontSize: '12px', color: '#475569' }}>{stat.label}</p>
-            </motion.div>
+            </div>
           ))}
         </div>
 
-        {/* Charts row */}
         <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '16px' }} className="charts-grid">
-
-          {/* Payroll Trend */}
           <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '16px', padding: '24px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
               <div>
                 <p style={{ fontSize: '14px', fontWeight: 600, color: '#F8FAFC' }}>Payroll Trend</p>
                 <p style={{ fontSize: '12px', color: '#475569', marginTop: '2px' }}>Monthly payroll spend (GHS)</p>
               </div>
-              <span style={{ fontSize: '11px', padding: '4px 12px', borderRadius: '999px', background: 'rgba(99,102,241,0.1)', color: '#818CF8', border: '1px solid rgba(99,102,241,0.2)' }}>Last 7 months</span>
             </div>
             {!hasPayrollData ? (
               <div style={{ height: '180px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: '8px' }}>
@@ -253,12 +198,11 @@ export default function Dashboard() {
             )}
           </div>
 
-          {/* Pay Breakdown Pie */}
           <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '16px', padding: '24px' }}>
             <p style={{ fontSize: '14px', fontWeight: 600, color: '#F8FAFC', marginBottom: '4px' }}>Pay Breakdown</p>
             <p style={{ fontSize: '12px', color: '#475569', marginBottom: '16px' }}>Deductions vs net pay</p>
             {!hasPayrollData ? (
-              <div style={{ height: '160px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: '8px' }}>
+              <div style={{ height: '160px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <p style={{ color: '#475569', fontSize: '13px', textAlign: 'center' }}>Run payroll to see breakdown</p>
               </div>
             ) : (
@@ -287,13 +231,11 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Compliance Alerts */}
         <ComplianceAlerts />
 
-        {/* Payroll by Department */}
-        <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '16px', padding: '24px', width: '100%' }}>
+        <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '16px', padding: '24px' }}>
           <p style={{ fontSize: '14px', fontWeight: 600, color: '#F8FAFC', marginBottom: '4px' }}>Payroll by Department</p>
-          <p style={{ fontSize: '12px', color: '#475569', marginTop: '2px', marginBottom: '24px' }}>This month's spend per department</p>
+          <p style={{ fontSize: '12px', color: '#475569', marginBottom: '24px' }}>Salary spend per department</p>
           {deptData.length === 0 ? (
             <div style={{ height: '120px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: '8px' }}>
               <p style={{ color: '#475569', fontSize: '14px', fontWeight: 600 }}>No employees added yet</p>
@@ -316,10 +258,8 @@ export default function Dashboard() {
             </ResponsiveContainer>
           )}
         </div>
-
       </div>
       <style>{`
-        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
         @media (max-width: 768px) {
           .stats-grid { grid-template-columns: 1fr 1fr !important; }
           .charts-grid { grid-template-columns: 1fr !important; }
