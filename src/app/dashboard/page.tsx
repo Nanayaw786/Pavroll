@@ -37,23 +37,26 @@ export default function Dashboard() {
   const checkOnboarding = async () => {
     if (!user) return
     try {
-      // Get or create company
-      let cId = await getCompanyId(user.id)
-      if (!cId) {
-        cId = await createCompanyForUser(
-          user.id,
-          user.primaryEmailAddress?.emailAddress || '',
-          user.fullName || user.firstName || 'Admin'
-        )
+      const cId = await getCompanyId(user.id)
+      if (!cId) { router.replace('/onboarding'); return }
+
+      const { data: co } = await supabase
+        .from('companies')
+        .select('onboarding_completed')
+        .eq('id', cId)
+        .single()
+
+      if (!co?.onboarding_completed) {
+        router.replace('/onboarding')
+        return
       }
-      if (!cId) { router.push('/onboarding'); return }
 
       setCompanyId(cId)
       setReady(true)
       loadDashboard(cId)
     } catch (err) {
       console.error(err)
-      router.push('/onboarding')
+      router.replace('/onboarding')
     }
   }
 
