@@ -55,22 +55,13 @@ export default function Dashboard() {
       // Check if onboarding completed
       const { data: co } = await supabase
         .from('companies')
-        .select('name, phone')
+        .select('name, phone, onboarding_completed')
         .eq('id', cId)
         .single()
 
-      const needsOnboarding = !co?.phone || 
-        co?.name?.includes("'s Company") || 
-        co?.name?.includes('My Company') ||
-        co?.name === ''
-
-      if (needsOnboarding) {
-        // Only redirect if not already on onboarding
-        const onboardingDone = sessionStorage.getItem('onboarding_done')
-        if (!onboardingDone) {
-          router.push('/onboarding')
-          return
-        }
+      if (!co?.onboarding_completed) {
+        router.push('/onboarding')
+        return
       }
       
       if (!cId) return

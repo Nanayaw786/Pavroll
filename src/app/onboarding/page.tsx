@@ -152,6 +152,7 @@ export default function OnboardingPage() {
       if (form.lead_source) updates.lead_source = form.lead_source
       if (form.lead_source_detail) updates.lead_source_detail = form.lead_source_detail
 
+      updates.onboarding_completed = true
       await supabase.from('companies').update(updates).eq('id', cId)
 
       // Apply referral code if provided
