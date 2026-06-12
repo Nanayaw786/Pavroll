@@ -153,7 +153,13 @@ export default function OnboardingPage() {
       if (form.lead_source_detail) updates.lead_source_detail = form.lead_source_detail
 
       updates.onboarding_completed = true
-      await supabase.from('companies').update(updates).eq('id', cId)
+      const { error: updateError } = await supabase.from('companies').update(updates).eq('id', cId)
+      if (updateError) {
+        console.error('Update error:', updateError)
+        setError('Could not save your details. Please try again.')
+        setSaving(false)
+        return
+      }
 
       // Apply referral code if provided
       if (form.referral_code.trim()) {
