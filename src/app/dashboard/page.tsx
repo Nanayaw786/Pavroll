@@ -52,25 +52,25 @@ export default function Dashboard() {
         return
       }
 
-      // Check if onboarding completed - only redirect once
-      const alreadyChecked = sessionStorage.getItem('onboarding_checked')
-      if (!alreadyChecked) {
-        const { data: co } = await supabase
-          .from('companies')
-          .select('name, phone')
-          .eq('id', cId)
-          .single()
+      // Check if onboarding completed
+      const { data: co } = await supabase
+        .from('companies')
+        .select('name, phone')
+        .eq('id', cId)
+        .single()
 
-        const needsOnboarding = !co?.phone || 
-          co?.name?.includes("'s Company") || 
-          co?.name?.includes('My Company') ||
-          co?.name === ''
+      const needsOnboarding = !co?.phone || 
+        co?.name?.includes("'s Company") || 
+        co?.name?.includes('My Company') ||
+        co?.name === ''
 
-        if (needsOnboarding) {
+      if (needsOnboarding) {
+        // Only redirect if not already on onboarding
+        const onboardingDone = sessionStorage.getItem('onboarding_done')
+        if (!onboardingDone) {
           router.push('/onboarding')
           return
         }
-        sessionStorage.setItem('onboarding_checked', 'true')
       }
       
       if (!cId) return
