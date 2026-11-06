@@ -23,7 +23,7 @@ const emptyForm = {
 
 export default function EmployeesPage() {
   const [employees, setEmployees] = useState<Employee[]>([])
-  const { user } = useUser()
+  const { user, isLoaded } = useUser()
   const [loading, setLoading] = useState(true)
   const [companyId, setCompanyId] = useState('')
   const [search, setSearch] = useState('')
@@ -33,10 +33,7 @@ export default function EmployeesPage() {
   const [form, setForm] = useState(emptyForm)
   const [openMenu, setOpenMenu] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
-
-  useEffect(() => {
-    loadData()
-  }, [])
+  const [errorMsg, setErrorMsg] = useState('')
 
   const loadData = async () => {
     try {
@@ -58,6 +55,12 @@ export default function EmployeesPage() {
     }
   }
 
+  // Wait until Clerk has loaded the user before looking up the company
+  useEffect(() => {
+    if (!isLoaded || !user?.id) return
+    loadData()
+  }, [isLoaded, user?.id])
+
   const filtered = employees.filter(e => {
     const matchSearch = e.name.toLowerCase().includes(search.toLowerCase()) ||
       e.email.toLowerCase().includes(search.toLowerCase()) ||
@@ -69,11 +72,13 @@ export default function EmployeesPage() {
   const openAdd = () => {
     setEditingId(null)
     setForm(emptyForm)
+    setErrorMsg('')
     setShowDialog(true)
   }
 
   const openEdit = (emp: Employee) => {
     setEditingId(emp.id)
+    setErrorMsg('')
     setForm({
       name: emp.name, email: emp.email, phone: emp.phone,
       department: emp.department, position: emp.position,
@@ -94,7 +99,11 @@ export default function EmployeesPage() {
   }
 
   const handleSave = async () => {
-    if (!form.name || !form.email || !form.department) return
+    if (!form.name || !form.email || !form.department) {
+      setErrorMsg('Please fill in the name, email and department.')
+      return
+    }
+    setErrorMsg('')
     setSaving(true)
     try {
       if (editingId) {
@@ -108,8 +117,18 @@ export default function EmployeesPage() {
         })
         setEmployees(prev => prev.map(e => e.id === editingId ? updated : e))
       } else {
+        let cId = companyId
+        if (!cId) {
+          // Company was not found yet - try once more before giving up
+          cId = await getCompanyId(user?.id)
+          if (cId) setCompanyId(cId)
+        }
+        if (!cId) {
+          setErrorMsg('We could not find your company. Please refresh the page and try again.')
+          return
+        }
         const newEmp = await addEmployee({
-          company_id: companyId, name: form.name, email: form.email,
+          company_id: cId, name: form.name, email: form.email,
           phone: form.phone, department: form.department, position: form.position,
           basic_salary: Number(form.basicSalary), ssnit_number: form.ssnitNumber,
           bank_name: form.bankName, bank_account: form.bankAccount,
@@ -121,6 +140,7 @@ export default function EmployeesPage() {
       setShowDialog(false)
     } catch (err) {
       console.error(err)
+      setErrorMsg('The employee could not be saved. Please check the details and try again.')
     } finally {
       setSaving(false)
     }
@@ -304,6 +324,11 @@ export default function EmployeesPage() {
                 </select>
               </div>
             </div>
+            {errorMsg && (
+              <p style={{ marginTop: '16px', padding: '10px 14px', borderRadius: '10px', background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.25)', color: '#F87171', fontSize: '13px' }}>
+                {errorMsg}
+              </p>
+            )}
             <div style={{ display: 'flex', gap: '12px', marginTop: '28px', justifyContent: 'flex-end' }}>
               <button onClick={() => setShowDialog(false)}
                 style={{ padding: '10px 20px', borderRadius: '10px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: '#94A3B8', fontSize: '13px', cursor: 'pointer', fontWeight: 500 }}>
