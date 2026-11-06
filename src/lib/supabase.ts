@@ -3,7 +3,23 @@ import { createClient } from '@supabase/supabase-js'
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey)
+// Sends the logged-in Clerk user's token so database rules know who is asking
+async function getClerkToken(): Promise<string | null> {
+  if (typeof window === 'undefined') return null
+  for (let i = 0; i < 30; i++) {
+    const clerk = (window as any).Clerk
+    if (clerk?.loaded && clerk.session) {
+      try { return await clerk.session.getToken() } catch { return null }
+    }
+    if (clerk?.loaded && !clerk.session) return null
+    await new Promise(r => setTimeout(r, 100))
+  }
+  return null
+}
+
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+  accessToken: getClerkToken,
+})
 
 export type Database = {
   public: {
