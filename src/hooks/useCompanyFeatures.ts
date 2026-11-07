@@ -1,5 +1,6 @@
 'use client'
 import { useState, useEffect } from 'react'
+import { useUser } from '@clerk/nextjs'
 import { supabase } from '@/lib/supabase'
 import { getCompanyId } from '@/lib/employees'
 
@@ -44,16 +45,24 @@ export const DEFAULT_FEATURES: CompanyFeatures = {
 }
 
 export function useCompanyFeatures() {
+  const { user, isLoaded } = useUser()
   const [features, setFeatures] = useState<CompanyFeatures>(DEFAULT_FEATURES)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    loadFeatures()
-  }, [])
+    // Wait until Clerk has loaded the user before looking up the company
+    if (!isLoaded) return
+    if (!user?.id) {
+      setLoading(false)
+      return
+    }
+    loadFeatures(user.id)
+  }, [isLoaded, user?.id])
 
-  const loadFeatures = async () => {
+  const loadFeatures = async (userId: string) => {
     try {
-      const cId = await getCompanyId()
+      const cId = await getCompanyId(userId)
+      if (!cId) return
       const { data } = await supabase
         .from('companies')
         .select('features')
