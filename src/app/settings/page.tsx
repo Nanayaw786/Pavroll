@@ -75,7 +75,7 @@ export default function SettingsPage() {
       currency: 'GHS',
       metadata: { plan: planKey, company_name: companyForm.name, plan_name: planName },
       callback: (response: any) => {
-        setResult({ success: true, message: `Payment successful! Reference: ${response.reference}` })
+        window.location.href = `/billing/success?reference=${response.reference}`
         setPayingPlan(null)
       },
       onClose: () => { setPayingPlan(null) }

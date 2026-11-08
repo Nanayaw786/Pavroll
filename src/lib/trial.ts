@@ -12,7 +12,7 @@ export type TrialStatus = {
 export async function getTrialStatus(companyId: string): Promise<TrialStatus> {
   const { data, error } = await supabase
     .from('companies')
-    .select('trial_started_at, trial_ends_at, plan, is_active')
+    .select('trial_started_at, trial_ends_at, plan, is_active, plan_expires_at')
     .eq('id', companyId)
     .single()
 
@@ -23,7 +23,11 @@ export async function getTrialStatus(companyId: string): Promise<TrialStatus> {
   const now = new Date()
   const trialEndsAt = data.trial_ends_at ? new Date(data.trial_ends_at) : null
   const isTrial = data.plan === 'trial'
-  const isExpired = isTrial && trialEndsAt ? now > trialEndsAt : false
+  const trialExpired = isTrial && trialEndsAt ? now > trialEndsAt : false
+  // A paid plan runs until plan_expires_at (no date means it was set by hand and never expires)
+  const planEndsAt = data.plan_expires_at ? new Date(data.plan_expires_at) : null
+  const paidExpired = !isTrial && planEndsAt ? now > planEndsAt : false
+  const isExpired = trialExpired || paidExpired
   const daysLeft = trialEndsAt ? Math.max(0, Math.ceil((trialEndsAt.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))) : 0
   const isActive = data.is_active && !isExpired
 
