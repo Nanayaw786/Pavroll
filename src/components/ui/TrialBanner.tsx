@@ -1,22 +1,27 @@
 'use client'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useState, useEffect } from 'react'
+import { useUser } from '@clerk/nextjs'
 import { X, Zap, Clock } from 'lucide-react'
 import Link from 'next/link'
 import { getTrialStatus, getTrialBannerColor, getTrialMessage, type TrialStatus } from '@/lib/trial'
 import { getCompanyId } from '@/lib/employees'
 
 export default function TrialBanner() {
+  const { user, isLoaded } = useUser()
   const [trial, setTrial] = useState<TrialStatus | null>(null)
   const [dismissed, setDismissed] = useState(false)
 
   useEffect(() => {
-    loadTrial()
-  }, [])
+    // Wait until Clerk has loaded the user before looking up the company
+    if (!isLoaded || !user?.id) return
+    loadTrial(user.id)
+  }, [isLoaded, user?.id])
 
-  const loadTrial = async () => {
+  const loadTrial = async (userId: string) => {
     try {
-      const cId = await getCompanyId()
+      const cId = await getCompanyId(userId)
+      if (!cId) return
       const status = await getTrialStatus(cId)
       setTrial(status)
     } catch (err) {
