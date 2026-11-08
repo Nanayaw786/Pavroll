@@ -16,13 +16,13 @@ const statusConfig = {
 }
 
 const plans = [
-  { name: 'Starter', price: 'GHS 120', period: '/month', employees: 'Up to 10 employees', sms: '50 SMS/month', color: '#6366F1', current: true },
-  { name: 'Growth', price: 'GHS 350', period: '/month', employees: 'Up to 50 employees', sms: '200 SMS/month', color: '#10B981', current: false },
-  { name: 'Business', price: 'GHS 800', period: '/month', employees: 'Unlimited employees', sms: 'Unlimited SMS', color: '#F59E0B', current: false },
+  { name: 'Starter', price: 'GHS 300', period: '/month', employees: 'Up to 10 employees', sms: '50 SMS/month', color: '#6366F1', current: true },
+  { name: 'Growth', price: 'GHS 800', period: '/month', employees: 'Up to 50 employees', sms: '200 SMS/month', color: '#10B981', current: false },
+  { name: 'Business', price: 'GHS 1,600', period: '/month', employees: 'Unlimited employees', sms: 'Unlimited SMS', color: '#F59E0B', current: false },
 ]
 
 export default function SettingsPage() {
-  const { user } = useUser()
+  const { user, isLoaded } = useUser()
   const [companyId, setCompanyId] = useState('')
   const [company, setCompany] = useState<any>(null)
   const [requests, setRequests] = useState<SenderIdRequest[]>([])
@@ -69,7 +69,7 @@ export default function SettingsPage() {
   const handlePaystack = (planKey: string, amount: number, planName: string) => {
     if (typeof window === 'undefined') return
     const handler = (window as any).PaystackPop.setup({
-      key: process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY || 'pk_live_eaf1f4d99ab4aa521121a6b9760925cfb5eaa60d',
+      key: process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY,
       email: company?.email || 'admin@company.com',
       amount: amount * 100,
       currency: 'GHS',
@@ -83,7 +83,11 @@ export default function SettingsPage() {
     handler.openIframe()
   }
 
-  useEffect(() => { loadData() }, [])
+  // Wait until Clerk has loaded the user before looking up the company
+  useEffect(() => {
+    if (!isLoaded || !user?.id) return
+    loadData()
+  }, [isLoaded, user?.id])
 
   const loadData = async () => {
     try {
@@ -594,7 +598,7 @@ export default function SettingsPage() {
               <CheckCircle size={18} color="#10B981" />
               <div>
                 <p style={{ fontSize: '14px', fontWeight: 600, color: '#F8FAFC' }}>Starter Plan — Active</p>
-                <p style={{ fontSize: '12px', color: '#475569' }}>GHS 120/month • Renews July 6, 2026</p>
+                <p style={{ fontSize: '12px', color: '#475569' }}>GHS 300/month</p>
               </div>
             </div>
 
@@ -619,7 +623,7 @@ export default function SettingsPage() {
                   <motion.button whileHover={{ scale: plan.current ? 1 : 1.02 }} whileTap={{ scale: plan.current ? 1 : 0.98 }}
                     onClick={() => {
                       if (plan.current) return
-                      const amounts: Record<string, number> = { starter: 120, growth: 350, business: 800 }
+                      const amounts: Record<string, number> = { starter: 300, growth: 800, business: 1600 }
                       const planKey = plan.name.toLowerCase()
                       setPayingPlan(planKey)
                       handlePaystack(planKey, amounts[planKey], plan.name)

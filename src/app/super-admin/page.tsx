@@ -57,7 +57,7 @@ const PLAN_COLORS: Record<string, string> = {
 }
 
 const PLAN_PRICES: Record<string, number> = {
-  trial: 0, starter: 120, growth: 350, business: 800,
+  trial: 0, starter: 300, growth: 800, business: 1600,
 }
 
 const NAV_ITEMS = [
@@ -647,9 +647,9 @@ export default function SuperAdminPage() {
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px' }}>
                   {[
                     { label: 'Trial', count: stats.onTrial, revenue: 0, color: '#F59E0B' },
-                    { label: 'Starter (GHS 120)', count: stats.starter, revenue: stats.starter * 120, color: '#6366F1' },
-                    { label: 'Growth (GHS 350)', count: stats.growth, revenue: stats.growth * 350, color: '#10B981' },
-                    { label: 'Business (GHS 800)', count: stats.business, revenue: stats.business * 800, color: '#EF4444' },
+                    { label: 'Starter (GHS 300)', count: stats.starter, revenue: stats.starter * 300, color: '#6366F1' },
+                    { label: 'Growth (GHS 800)', count: stats.growth, revenue: stats.growth * 800, color: '#10B981' },
+                    { label: 'Business (GHS 1,600)', count: stats.business, revenue: stats.business * 1600, color: '#EF4444' },
                   ].map(plan => (
                     <div key={plan.label} style={{ padding: '16px', borderRadius: '12px', background: `${plan.color}08`, border: `1px solid ${plan.color}20`, textAlign: 'center' }}>
                       <p style={{ fontSize: '28px', fontWeight: 800, color: plan.color }}>{plan.count}</p>
@@ -1153,9 +1153,9 @@ export default function SuperAdminPage() {
                 <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '16px', padding: '24px' }}>
                   <h3 style={{ fontSize: '15px', fontWeight: 700, color: '#F8FAFC', marginBottom: '20px' }}>Revenue Breakdown</h3>
                   {[
-                    { plan: 'Starter', count: stats.starter, price: 120, color: '#6366F1' },
-                    { plan: 'Growth', count: stats.growth, price: 350, color: '#10B981' },
-                    { plan: 'Business', count: stats.business, price: 800, color: '#EF4444' },
+                    { plan: 'Starter', count: stats.starter, price: 300, color: '#6366F1' },
+                    { plan: 'Growth', count: stats.growth, price: 800, color: '#10B981' },
+                    { plan: 'Business', count: stats.business, price: 1600, color: '#EF4444' },
                   ].map(p => (
                     <div key={p.plan} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 0', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>

@@ -14,7 +14,7 @@ const features = [
 ]
 
 const plans = [
-  { name: 'Starter', price: 'GHS 120', period: '/mo', employees: 'Up to 10 employees', features: [
+  { name: 'Starter', price: 'GHS 300', period: '/mo', employees: 'Up to 10 employees', features: [
     '✅ PAYE & SSNIT calculations',
     '✅ PDF Payslips',
     '✅ Employee Management',
@@ -27,7 +27,7 @@ const plans = [
     '❌ Loan Module',
     '📧 Email Support',
   ], color: '#6366F1', popular: false },
-  { name: 'Growth', price: 'GHS 350', period: '/mo', employees: 'Up to 50 employees', features: [
+  { name: 'Growth', price: 'GHS 800', period: '/mo', employees: 'Up to 50 employees', features: [
     '✅ Everything in Starter',
     '✅ Advanced Reports (90 days)',
     '✅ 200 SMS/month',
@@ -39,7 +39,7 @@ const plans = [
     '❌ API Access',
     '📧📞 Email + Phone Support',
   ], color: '#10B981', popular: true },
-  { name: 'Business', price: 'GHS 800', period: '/mo', employees: 'Unlimited employees', features: [
+  { name: 'Business', price: 'GHS 1,600', period: '/mo', employees: 'Unlimited employees', features: [
     '✅ Everything in Growth',
     '✅ Unlimited SMS',
     '✅ Unlimited Team Members',

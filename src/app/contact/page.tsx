@@ -11,7 +11,7 @@ const faqs = [
   { q: 'Can I import existing employees?', a: 'Yes. You can bulk import employees via CSV upload. Download our template, fill in your staff details and upload.' },
   { q: 'How do employees access their payslips?', a: 'Employees log in to the Employee Self-Service (ESS) portal to view and download their payslips. You can also email payslips directly.' },
   { q: 'Can I cancel anytime?', a: 'Yes. No contracts, no lock-in. Cancel your subscription at any time from the billing settings.' },
-  { q: 'Do you support multiple companies?', a: 'Multi-company support is available on the Business plan (GHS 800/month). Perfect for accountants managing multiple clients.' },
+  { q: 'Do you support multiple companies?', a: 'Multi-company support is available on the Business plan (GHS 1,600/month). Perfect for accountants managing multiple clients.' },
 ]
 
 export default function ContactPage() {

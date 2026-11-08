@@ -60,9 +60,9 @@ export default function TermsPage() {
               title: '4. Subscription & Billing',
               content: `Pavroll offers three subscription plans:
 
-- Starter: GHS 120/month — up to 10 employees
-- Growth: GHS 350/month — up to 50 employees
-- Business: GHS 800/month — unlimited employees
+- Starter: GHS 300/month — up to 10 employees
+- Growth: GHS 800/month — up to 50 employees
+- Business: GHS 1,600/month — unlimited employees
 
 Payments are processed monthly via Paystack. Subscriptions auto-renew unless cancelled. You may cancel at any time. No refunds are provided for partial months. Prices may change with 30 days notice.`
             },

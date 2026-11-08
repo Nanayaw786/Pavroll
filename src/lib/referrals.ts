@@ -31,9 +31,9 @@ export type Referral = {
 
 const PLAN_PRICES: Record<string, number> = {
   trial: 0,
-  starter: 120,
-  growth: 350,
-  business: 800,
+  starter: 300,
+  growth: 800,
+  business: 1600,
 }
 
 // Get all partners

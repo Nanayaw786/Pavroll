@@ -3,14 +3,16 @@ import { motion } from 'framer-motion'
 import Link from 'next/link'
 import { Zap, CheckCircle, ArrowRight, Clock } from 'lucide-react'
 import { useState } from 'react'
+import { useUser } from '@clerk/nextjs'
 
 const plans = [
-  { key: 'starter', name: 'Starter', price: 120, employees: 'Up to 10 employees', sms: '50 SMS/month', color: '#6366F1' },
-  { key: 'growth', name: 'Growth', price: 350, employees: 'Up to 50 employees', sms: '200 SMS/month', color: '#10B981', popular: true },
-  { key: 'business', name: 'Business', price: 800, employees: 'Unlimited employees', sms: 'Unlimited SMS', color: '#F59E0B' },
+  { key: 'starter', name: 'Starter', price: 300, employees: 'Up to 10 employees', sms: '50 SMS/month', color: '#6366F1' },
+  { key: 'growth', name: 'Growth', price: 800, employees: 'Up to 50 employees', sms: '200 SMS/month', color: '#10B981', popular: true },
+  { key: 'business', name: 'Business', price: 1600, employees: 'Unlimited employees', sms: 'Unlimited SMS', color: '#F59E0B' },
 ]
 
 export default function TrialExpiredPage() {
+  const { user } = useUser()
   const [paying, setPaying] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
 
@@ -22,8 +24,8 @@ export default function TrialExpiredPage() {
     }
     setPaying(planKey)
     const handler = (window as any).PaystackPop.setup({
-      key: 'pk_live_eaf1f4d99ab4aa521121a6b9760925cfb5eaa60d',
-      email: 'admin@company.com',
+      key: process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY,
+      email: user?.primaryEmailAddress?.emailAddress || 'admin@company.com',
       amount: amount * 100,
       currency: 'GHS',
       metadata: { plan: planKey, plan_name: planName },
@@ -80,7 +82,7 @@ export default function TrialExpiredPage() {
               </div>
             )}
             <h3 style={{ fontSize: '18px', fontWeight: 700, color: plan.color, marginBottom: '4px' }}>{plan.name}</h3>
-            <p style={{ fontSize: '32px', fontWeight: 800, color: '#F8FAFC', marginBottom: '4px' }}>GHS {plan.price}</p>
+            <p style={{ fontSize: '32px', fontWeight: 800, color: '#F8FAFC', marginBottom: '4px' }}>GHS {plan.price.toLocaleString('en-US')}</p>
             <p style={{ fontSize: '13px', color: '#475569', marginBottom: '20px' }}>per month</p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '24px', textAlign: 'left' }}>
               {[plan.employees, plan.sms, 'All features included', 'Priority support', 'Custom Sender ID'].map(f => (

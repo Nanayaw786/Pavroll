@@ -34,7 +34,7 @@ const stats = [
 
 const whyGhana = [
   { title: 'Built for GRA 2026', desc: 'PAYE tax bands, SSNIT contributions, Tier 2 pension — all hardcoded to Ghana\'s exact regulations. Not a generic tool adapted for Ghana.' },
-  { title: 'Priced in GHS', desc: 'Starting at GHS 120/month. No USD billing, no hidden forex charges. Transparent pricing for Ghanaian businesses.' },
+  { title: 'Priced in GHS', desc: 'Starting at GHS 300/month. No USD billing, no hidden forex charges. Transparent pricing for Ghanaian businesses.' },
   { title: 'SSNIT Schedule Export', desc: 'Generate SSNIT contribution schedules ready for submission. One click CSV export that accountants love.' },
   { title: 'Ghana Card Integration', desc: 'Store Ghana Card numbers alongside SSNIT numbers, bank details and employment contracts in one place.' },
   { title: 'Local Support', desc: 'Support team based in Ghana. We understand your payroll challenges because we\'ve lived them.' },
@@ -263,8 +263,8 @@ export default function AboutPage() {
             </p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
               {[
-                { icon: Mail, label: 'Email', value: 'hello@pavroll.app' },
-                { icon: Phone, label: 'Phone', value: '+233 XX XXX XXXX' },
+                { icon: Mail, label: 'Email', value: 'hello.pavroll@proton.me' },
+                { icon: Phone, label: 'Phone', value: '+233 53 929 9311' },
                 { icon: MapPin, label: 'Location', value: 'Accra, Ghana 🇬🇭' },
               ].map(item => (
                 <div key={item.label} style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>

@@ -3,11 +3,11 @@ import { rateLimit, getClientIP } from '@/lib/rateLimit'
 
 const PAYSTACK_SECRET = process.env.PAYSTACK_SECRET_KEY!
 
-// Plan amounts in kobo (GHS * 100)
+// Plan amounts in pesewas (GHS * 100)
 const PLANS = {
-  starter: { amount: 12000, name: 'Starter Plan', description: 'Up to 10 employees, 50 SMS/month' },
-  growth: { amount: 35000, name: 'Growth Plan', description: 'Up to 50 employees, 200 SMS/month' },
-  business: { amount: 80000, name: 'Business Plan', description: 'Unlimited employees & SMS' },
+  starter: { amount: 30000, name: 'Starter Plan', description: 'Up to 10 employees, 50 SMS/month' },
+  growth: { amount: 80000, name: 'Growth Plan', description: 'Up to 50 employees, 200 SMS/month' },
+  business: { amount: 160000, name: 'Business Plan', description: 'Unlimited employees & SMS' },
 }
 
 // Initialize transaction
