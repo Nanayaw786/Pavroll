@@ -16,6 +16,7 @@ import { supabase } from '@/lib/supabase'
 import { calculatePayroll, DEFAULT_SETTINGS } from '@/lib/payroll'
 import { getAnalyticsSummary } from '@/lib/analytics'
 import { getReferralPartners, getReferrals, createReferralPartner, updateReferralPartner, deleteReferralPartner, generateReferralCode, type ReferralPartner, type Referral } from '@/lib/referrals'
+import { isSuperAdmin } from '@/lib/admin'
 
 type Company = {
   id: string
@@ -24,6 +25,7 @@ type Company = {
   phone: string
   plan: string
   trial_ends_at: string
+  plan_expires_at?: string | null
   is_active: boolean
   features: Record<string, boolean>
   created_at: string
@@ -69,6 +71,7 @@ const NAV_ITEMS = [
   { key: 'calculator', label: 'Calculator', icon: Calculator },
   { key: 'announcements', label: 'Announcements', icon: Megaphone },
   { key: 'senderids', label: 'Sender IDs', icon: MessageSquare },
+  { key: 'payments', label: 'Payments', icon: CreditCard },
   { key: 'revenue', label: 'Revenue', icon: DollarSign },
   { key: 'system', label: 'System', icon: Server },
   { key: 'referrals', label: 'Referrals', icon: Star },
@@ -340,34 +343,18 @@ function LeadSourceChart({ companies }: { companies: any[] }) {
   )
 }
 
-const SUPER_ADMIN_EMAILS = [
-  'samuelannanemensah@gmail.com',
-  'hello.pavroll@proton.me',
-]
 
 export default function SuperAdminPage() {
-  const { user } = useUser()
+  const { user, isLoaded } = useUser()
   const router = useRouter()
+
+  const { signOut } = useClerk()
+  const allowed = isSuperAdmin(user?.primaryEmailAddress?.emailAddress)
 
   // Protect super admin
   useEffect(() => {
-    if (user && !SUPER_ADMIN_EMAILS.includes(user.primaryEmailAddress?.emailAddress || '')) {
-      router.replace('/dashboard')
-    }
-  }, [user])
-
-  if (!user || !SUPER_ADMIN_EMAILS.includes(user.primaryEmailAddress?.emailAddress || '')) {
-    return (
-      <div style={{ minHeight: '100vh', background: '#0A0A0F', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <div style={{ textAlign: 'center', color: '#475569' }}>
-          <Shield size={40} style={{ margin: '0 auto 16px' }} />
-          <p style={{ fontSize: '16px', fontWeight: 600, color: '#F8FAFC' }}>Access Denied</p>
-          <p style={{ fontSize: '13px', marginTop: '8px' }}>You don't have permission to view this page.</p>
-        </div>
-      </div>
-    )
-  }
-  const { signOut } = useClerk()
+    if (isLoaded && !allowed) router.replace('/dashboard')
+  }, [isLoaded, allowed])
   const [tab, setTab] = useState('overview')
   const [companies, setCompanies] = useState<Company[]>([])
   const [loading, setLoading] = useState(true)
@@ -387,8 +374,10 @@ export default function SuperAdminPage() {
   const [editingPartner, setEditingPartner] = useState<ReferralPartner | null>(null)
   const [partnerForm, setPartnerForm] = useState({ name: '', email: '', phone: '', code: '', commission_rate: 20, notes: '' })
   const [savingPartner, setSavingPartner] = useState(false)
+  const [payments, setPayments] = useState<any[]>([])
+  const [loadingPayments, setLoadingPayments] = useState(false)
 
-  useEffect(() => { loadData(); loadAnalytics(); loadReferrals() }, [])
+  useEffect(() => { if (!allowed) return; loadData(); loadAnalytics(); loadReferrals(); loadPayments() }, [allowed])
 
   const loadReferrals = async () => {
     try {
@@ -399,6 +388,16 @@ export default function SuperAdminPage() {
       setPartners(partnersData)
       setReferrals(referralsData)
     } catch (err) { console.error(err) }
+  }
+
+  const loadPayments = async () => {
+    setLoadingPayments(true)
+    try {
+      const res = await fetch('/api/admin/payments', { cache: 'no-store' })
+      const json = await res.json()
+      if (res.ok) setPayments(json.payments || [])
+    } catch (err) { console.error(err) }
+    finally { setLoadingPayments(false) }
   }
 
   const loadAnalytics = async () => {
@@ -437,9 +436,19 @@ export default function SuperAdminPage() {
   }
 
   const updatePlan = async (companyId: string, plan: string) => {
-    await supabase.from('companies').update({ plan }).eq('id', companyId)
-    setCompanies(prev => prev.map(c => c.id === companyId ? { ...c, plan } : c))
-    setResult({ success: true, message: `Plan updated to ${plan}` })
+    try {
+      const res = await fetch('/api/admin/plan', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ companyId, plan }),
+      })
+      const json = await res.json()
+      if (!res.ok) throw new Error(json.error || 'Failed')
+      setCompanies(prev => prev.map(c => c.id === companyId ? { ...c, plan, plan_expires_at: json.plan_expires_at } : c))
+      setResult({ success: true, message: plan === 'trial' ? 'Plan set to trial' : `Plan set to ${plan} for 30 days` })
+    } catch (err: any) {
+      setResult({ success: false, message: err?.message || 'Failed to update plan' })
+    }
     setTimeout(() => setResult(null), 3000)
   }
 
@@ -503,6 +512,27 @@ export default function SuperAdminPage() {
       setTimeout(() => setResult(null), 4000)
     } catch { setResult({ success: false, message: 'Failed to send announcement' }) }
     finally { setSendingAnnouncement(false) }
+  }
+
+  if (!isLoaded) {
+    return (
+      <div style={{ minHeight: '100vh', background: '#0A0A0F', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <Loader2 size={32} color="#EF4444" style={{ animation: 'spin 1s linear infinite' }} />
+        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+      </div>
+    )
+  }
+
+  if (!user || !allowed) {
+    return (
+      <div style={{ minHeight: '100vh', background: '#0A0A0F', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ textAlign: 'center', color: '#475569' }}>
+          <Shield size={40} style={{ margin: '0 auto 16px' }} />
+          <p style={{ fontSize: '16px', fontWeight: 600, color: '#F8FAFC' }}>Access Denied</p>
+          <p style={{ fontSize: '13px', marginTop: '8px' }}>You don't have permission to view this page.</p>
+        </div>
+      </div>
+    )
   }
 
   const stats = {
@@ -962,7 +992,7 @@ export default function SuperAdminPage() {
                         {[
                           { label: 'Email', value: company.email || 'N/A' },
                           { label: 'Phone', value: company.phone || 'N/A' },
-                          { label: 'Trial Ends', value: company.plan === 'trial' ? `${daysLeft} days left` : 'Paid plan' },
+                          { label: 'Plan Ends', value: company.plan === 'trial' ? `${daysLeft} days left` : (company.plan_expires_at ? `Until ${new Date(company.plan_expires_at).toLocaleDateString()}` : 'Paid plan') },
                           { label: 'Monthly Revenue', value: `GHS ${(PLAN_PRICES[company.plan] || 0).toLocaleString()}` },
                         ].map(item => (
                           <div key={item.label} style={{ padding: '10px 12px', borderRadius: '8px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)' }}>
@@ -1172,6 +1202,62 @@ export default function SuperAdminPage() {
                     <span style={{ fontSize: '15px', fontWeight: 700, color: '#F8FAFC' }}>Total MRR</span>
                     <span style={{ fontSize: '20px', fontWeight: 800, color: '#10B981' }}>GHS {stats.mrr.toLocaleString()}/mo</span>
                   </div>
+                </div>
+              </div>
+            )}
+
+            {/* PAYMENTS */}
+            {tab === 'payments' && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px' }}>
+                  {[
+                    { label: 'Payments Received', value: payments.length, color: '#6366F1' },
+                    { label: 'Total Received', value: `GHS ${(payments.reduce((s, p) => s + Number(p.amount || 0), 0) / 100).toLocaleString()}`, color: '#10B981' },
+                  ].map(s => (
+                    <div key={s.label} style={{ padding: '16px 18px', borderRadius: '14px', background: `${s.color}08`, border: `1px solid ${s.color}20` }}>
+                      <p style={{ fontSize: '22px', fontWeight: 700, color: s.color }}>{s.value}</p>
+                      <p style={{ fontSize: '11px', color: '#475569', marginTop: '2px' }}>{s.label}</p>
+                    </div>
+                  ))}
+                </div>
+                <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '16px', overflow: 'hidden' }}>
+                  <div style={{ padding: '14px 20px', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <h3 style={{ fontWeight: 600, color: '#F8FAFC', fontSize: '14px' }}>Verified Paystack Payments</h3>
+                    <button onClick={loadPayments}
+                      style={{ padding: '5px 12px', borderRadius: '8px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: '#94A3B8', fontSize: '12px', cursor: 'pointer' }}>
+                      Refresh
+                    </button>
+                  </div>
+                  {loadingPayments && (
+                    <div style={{ padding: '32px', textAlign: 'center' }}>
+                      <Loader2 size={20} color="#EF4444" style={{ animation: 'spin 1s linear infinite', margin: '0 auto' }} />
+                    </div>
+                  )}
+                  {!loadingPayments && payments.length === 0 && (
+                    <div style={{ padding: '48px', textAlign: 'center' }}>
+                      <CreditCard size={36} color="#475569" style={{ margin: '0 auto 12px' }} />
+                      <p style={{ color: '#475569', fontSize: '14px' }}>No payments yet</p>
+                      <p style={{ color: '#334155', fontSize: '12px', marginTop: '4px' }}>Payments appear here after a customer pays and the plan is activated</p>
+                    </div>
+                  )}
+                  {payments.map(p => {
+                    const company = companies.find(c => c.id === p.company_id)
+                    const planColor = PLAN_COLORS[p.plan] || '#6366F1'
+                    return (
+                      <div key={p.id} style={{ padding: '12px 20px', borderBottom: '1px solid rgba(255,255,255,0.04)', display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+                        <div style={{ flex: 1, minWidth: '140px' }}>
+                          <p style={{ fontSize: '13px', fontWeight: 600, color: '#F8FAFC' }}>{company?.name || 'Unknown company'}</p>
+                          <p style={{ fontSize: '11px', color: '#475569' }}>{new Date(p.created_at).toLocaleString()}</p>
+                        </div>
+                        <span style={{ fontSize: '11px', fontWeight: 700, padding: '3px 10px', borderRadius: '999px', background: `${planColor}15`, color: planColor }}>{String(p.plan).toUpperCase()}</span>
+                        <span style={{ fontSize: '13px', fontWeight: 700, color: '#10B981' }}>GHS {(Number(p.amount) / 100).toLocaleString()}</span>
+                        {company?.plan_expires_at && (
+                          <span style={{ fontSize: '11px', color: '#94A3B8' }}>Until {new Date(company.plan_expires_at).toLocaleDateString()}</span>
+                        )}
+                        <span style={{ fontSize: '10px', color: '#475569', fontFamily: 'monospace' }}>{p.reference}</span>
+                      </div>
+                    )
+                  })}
                 </div>
               </div>
             )}

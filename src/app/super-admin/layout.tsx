@@ -3,25 +3,18 @@ import { useUser } from '@clerk/nextjs'
 import { useRouter } from 'next/navigation'
 import { useEffect } from 'react'
 import { Loader2 } from 'lucide-react'
-
-const SUPER_ADMIN_EMAILS = [
-  'samuelannanemensah@gmail.com',
-  'samuelannanemensah@proton.me',
-  'hello.pavroll@proton.me',
-]
+import { isSuperAdmin } from '@/lib/admin'
 
 export default function SuperAdminLayout({ children }: { children: React.ReactNode }) {
   const { user, isLoaded } = useUser()
   const router = useRouter()
+  const allowed = isSuperAdmin(user?.primaryEmailAddress?.emailAddress)
 
   useEffect(() => {
     if (!isLoaded) return
     if (!user) { router.push('/sign-in'); return }
-    const email = user.primaryEmailAddress?.emailAddress || ''
-    if (!SUPER_ADMIN_EMAILS.includes(email)) {
-      router.push('/dashboard')
-    }
-  }, [user, isLoaded])
+    if (!allowed) router.push('/dashboard')
+  }, [user, isLoaded, allowed])
 
   if (!isLoaded) return (
     <div style={{ minHeight: '100vh', background: '#0A0A0F', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -30,8 +23,7 @@ export default function SuperAdminLayout({ children }: { children: React.ReactNo
     </div>
   )
 
-  const email = user?.primaryEmailAddress?.emailAddress || ''
-  if (!SUPER_ADMIN_EMAILS.includes(email)) return null
+  if (!allowed) return null
 
   return <>{children}</>
 }
