@@ -82,6 +82,7 @@ export default function LandingPage() {
         </div>
         <div style={{ display: 'flex', gap: '12px' }}>
           <Link href="/dashboard" style={{ padding: '8px 18px', borderRadius: '9px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)', color: '#94A3B8', fontSize: '13px', fontWeight: 500, textDecoration: 'none' }}>Sign In</Link>
+          <Link href="/demo" style={{ padding: '8px 18px', borderRadius: '9px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)', color: '#94A3B8', fontSize: '13px', fontWeight: 500, textDecoration: 'none' }}>Book a Demo</Link>
           <Link href="/dashboard" style={{ padding: '8px 18px', borderRadius: '9px', background: '#6366F1', color: '#fff', fontSize: '13px', fontWeight: 600, textDecoration: 'none' }}>Get Started</Link>
         </div>
       </nav>
@@ -105,6 +106,12 @@ export default function LandingPage() {
               <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
                 style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '14px 28px', borderRadius: '12px', background: '#6366F1', color: '#fff', fontSize: '15px', fontWeight: 700, cursor: 'pointer', textDecoration: 'none' }}>
                 Start Free Trial <ArrowRight size={16} />
+              </motion.div>
+            </Link>
+            <Link href="/demo">
+              <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
+                style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '14px 28px', borderRadius: '12px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.12)', color: '#F8FAFC', fontSize: '15px', fontWeight: 700, cursor: 'pointer', textDecoration: 'none' }}>
+                Book a Demo
               </motion.div>
             </Link>
             <p style={{ fontSize: '13px', color: '#475569' }}>No credit card required</p>
