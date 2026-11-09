@@ -53,9 +53,9 @@ const plans = [
 ]
 
 const stats = [
-  { value: '500+', label: 'Companies' },
-  { value: 'GHS 2M+', label: 'Payroll Processed' },
-  { value: '99.9%', label: 'Uptime' },
+  { value: '30 days', label: 'Free Trial' },
+  { value: 'GRA 2026', label: 'Tax Rates Built In' },
+  { value: 'GHS', label: 'Priced in Cedis' },
   { value: '5 min', label: 'Setup Time' },
 ]
 
@@ -214,7 +214,7 @@ export default function LandingPage() {
         <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
           style={{ maxWidth: '600px', margin: '0 auto' }}>
           <h2 style={{ fontSize: '44px', fontWeight: 800, letterSpacing: '-0.02em', marginBottom: '16px' }}>Ready to simplify payroll?</h2>
-          <p style={{ fontSize: '16px', color: '#64748B', marginBottom: '36px' }}>Join hundreds of Ghanaian businesses running payroll the smart way.</p>
+          <p style={{ fontSize: '16px', color: '#64748B', marginBottom: '36px' }}>Start your free 30-day trial and run payroll the smart way.</p>
           <Link href="/dashboard">
             <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
               style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '16px 36px', borderRadius: '14px', background: '#6366F1', color: '#fff', fontSize: '16px', fontWeight: 700, cursor: 'pointer', textDecoration: 'none' }}>

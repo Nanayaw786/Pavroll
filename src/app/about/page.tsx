@@ -1,7 +1,7 @@
 'use client'
 import { motion } from 'framer-motion'
 import Link from 'next/link'
-import { Zap, CheckCircle, ArrowRight, Mail, Phone, MapPin, Star, Shield, TrendingUp, Users, FileText, Bell, UserX } from 'lucide-react'
+import { Zap, CheckCircle, ArrowRight, Mail, Phone, MapPin, Shield, TrendingUp, Users, FileText, Bell, UserX } from 'lucide-react'
 import { useState } from 'react'
 
 const features = [
@@ -13,22 +13,15 @@ const features = [
   { icon: UserX, title: 'Offboarding Module', desc: 'Calculate final pay, gratuity, notice pay and manage clearance checklists — nobody does this cleanly in Ghana.', color: '#EF4444' },
 ]
 
-const testimonials = [
-  { name: 'Abena Osei', role: 'HR Manager', company: 'TechGhana Ltd', text: 'Pavroll saved us 3 days every month. SSNIT calculations used to take forever. Now it\'s done in seconds.', rating: 5, avatar: 'AO' },
-  { name: 'Kweku Darko', role: 'Finance Director', company: 'Accra Foods Co.', text: 'The audit trail alone is worth the subscription. Our external auditors were impressed by the level of detail.', rating: 5, avatar: 'KD' },
-  { name: 'Ama Sarpong', role: 'CEO', company: 'Sarpong Ventures', text: 'Finally a payroll tool built for Ghana. The PAYE calculations are spot on with GRA 2026 rates.', rating: 5, avatar: 'AS' },
-  { name: 'Kofi Mensah', role: 'Accountant', company: 'MensahCorp', text: 'I manage payroll for 3 companies. Pavroll\'s multi-company support is a game changer for me.', rating: 5, avatar: 'KM' },
-]
-
 const team = [
   { name: 'Samuel Mensah', role: 'Founder & CEO', bio: 'Full-stack developer with 7+ years building software for African businesses. Built Pavroll to solve his own payroll pain.', avatar: 'SM', color: '#6366F1' },
   { name: 'KodrixLab', role: 'Technology', bio: 'The engineering team behind Pavroll. Specialists in building premium SaaS products for the Ghanaian market.', avatar: 'KL', color: '#10B981' },
 ]
 
 const stats = [
-  { value: '500+', label: 'Companies' },
-  { value: 'GHS 2M+', label: 'Payroll Processed' },
-  { value: '99.9%', label: 'Uptime' },
+  { value: '30 days', label: 'Free Trial' },
+  { value: 'GRA 2026', label: 'Tax Rates Built In' },
+  { value: 'GHS', label: 'Priced in Cedis' },
   { value: '5 min', label: 'Setup Time' },
 ]
 
@@ -130,7 +123,7 @@ export default function AboutPage() {
                 Every feature in Pavroll was designed with the Ghanaian business context in mind. From GRA tax bands to SSNIT contribution schedules, we speak your language.
               </p>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                {['GHS pricing — no hidden forex charges', 'Supabase + Vercel — 99.9% uptime', 'GDPR & Ghana Data Protection compliant'].map(item => (
+                {['GHS pricing — no hidden forex charges', 'Hosted on Supabase + Vercel', 'Designed with data protection in mind'].map(item => (
                   <div key={item} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#6366F1', flexShrink: 0 }} />
                     <span style={{ fontSize: '13px', color: '#94A3B8' }}>{item}</span>
@@ -196,7 +189,7 @@ export default function AboutPage() {
               The existing tools were either too expensive, too complex, or not built for Ghana's specific tax laws. So we built Pavroll — a tool that automates everything, stays compliant with GRA regulations, and actually looks beautiful to use.
             </p>
             <p style={{ fontSize: '16px', color: '#64748B', lineHeight: 1.8 }}>
-              Today, Pavroll handles payroll for hundreds of Ghanaian businesses — from tech startups in Accra to manufacturing companies in Tema. We're just getting started. 🇬🇭
+              Pavroll is now opening its doors to its first Ghanaian businesses — from tech startups in Accra to manufacturing companies in Tema. We're just getting started. 🇬🇭
             </p>
           </motion.div>
         </div>
@@ -220,36 +213,6 @@ export default function AboutPage() {
               <p style={{ fontSize: '13px', color: '#64748B', lineHeight: 1.6 }}>{member.bio}</p>
             </motion.div>
           ))}
-        </div>
-      </section>
-
-      {/* Testimonials */}
-      <section style={{ padding: '80px', background: 'rgba(255,255,255,0.01)', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
-        <div style={{ maxWidth: '1280px', margin: '0 auto' }}>
-          <div style={{ textAlign: 'center', marginBottom: '60px' }}>
-            <h2 style={{ fontSize: '40px', fontWeight: 800, letterSpacing: '-0.02em' }}>What our clients say</h2>
-            <p style={{ fontSize: '16px', color: '#64748B', marginTop: '12px' }}>Ghanaian businesses trust Pavroll every month.</p>
-          </div>
-          <div className="about-testimonials" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '20px' }}>
-            {testimonials.map((t, i) => (
-              <motion.div key={t.name} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.08 }} viewport={{ once: true }}
-                style={{ padding: '28px', borderRadius: '18px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)' }}>
-                <div style={{ display: 'flex', gap: '4px', marginBottom: '16px' }}>
-                  {[...Array(t.rating)].map((_, j) => <Star key={j} size={14} color="#F59E0B" fill="#F59E0B" />)}
-                </div>
-                <p style={{ fontSize: '15px', color: '#94A3B8', lineHeight: 1.7, marginBottom: '20px', fontStyle: 'italic' }}>"{t.text}"</p>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                  <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: 'linear-gradient(135deg,#6366F1,#818CF8)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '13px', fontWeight: 700, color: '#fff', flexShrink: 0 }}>
-                    {t.avatar}
-                  </div>
-                  <div>
-                    <p style={{ fontSize: '14px', fontWeight: 600, color: '#F8FAFC' }}>{t.name}</p>
-                    <p style={{ fontSize: '12px', color: '#475569' }}>{t.role}, {t.company}</p>
-                  </div>
-                </div>
-              </motion.div>
-            ))}
-          </div>
         </div>
       </section>
 
@@ -314,7 +277,7 @@ export default function AboutPage() {
       <section style={{ padding: '100px 80px', textAlign: 'center', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
         <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} style={{ maxWidth: '600px', margin: '0 auto' }}>
           <h2 style={{ fontSize: '44px', fontWeight: 800, letterSpacing: '-0.02em', marginBottom: '16px' }}>Ready to simplify payroll?</h2>
-          <p style={{ fontSize: '16px', color: '#64748B', marginBottom: '36px' }}>Join hundreds of Ghanaian businesses running payroll the smart way.</p>
+          <p style={{ fontSize: '16px', color: '#64748B', marginBottom: '36px' }}>Start your free 30-day trial and run payroll the smart way.</p>
           <Link href="/dashboard">
             <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
               style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '16px 36px', borderRadius: '14px', background: '#6366F1', color: '#fff', fontSize: '16px', fontWeight: 700, cursor: 'pointer', textDecoration: 'none' }}>
