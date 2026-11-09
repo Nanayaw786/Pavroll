@@ -104,7 +104,7 @@ export default function TrialExpiredPage() {
 
       <p style={{ fontSize: '13px', color: '#475569', textAlign: 'center' }}>
         Questions? Contact us at{' '}
-        <a href="mailto:hello.pavroll@proton.me" style={{ color: '#6366F1', textDecoration: 'none' }}>hello.pavroll@proton.me</a>
+        <a href="mailto:hello@pavroll.com" style={{ color: '#6366F1', textDecoration: 'none' }}>hello@pavroll.com</a>
         {' '}or{' '}
         <a href="tel:+233539299311" style={{ color: '#6366F1', textDecoration: 'none' }}>+233 53 929 9311</a>
       </p>

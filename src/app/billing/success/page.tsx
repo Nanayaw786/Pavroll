@@ -131,7 +131,7 @@ function BillingSuccessContent() {
             </motion.div>
           </Link>
           <p style={{ fontSize: '12px', color: '#475569', marginTop: '20px' }}>
-            Need help? Email hello.pavroll@proton.me and include this reference: {reference}
+            Need help? Email hello@pavroll.com and include this reference: {reference}
           </p>
         </>
       )}

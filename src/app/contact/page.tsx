@@ -65,7 +65,7 @@ export default function ContactPage() {
       <section style={{ padding: '0 80px 60px', maxWidth: '1280px', margin: '0 auto' }}>
         <div className="contact-cards" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
           {[
-            { icon: Mail, title: 'Email Us', value: 'hello.pavroll@proton.me', desc: 'We reply within 24 hours', color: '#6366F1', bg: 'rgba(99,102,241,0.08)' },
+            { icon: Mail, title: 'Email Us', value: 'hello@pavroll.com', desc: 'We reply within 24 hours', color: '#6366F1', bg: 'rgba(99,102,241,0.08)' },
             { icon: Phone, title: 'Call Us', value: '+233 53 929 9311', desc: 'Mon–Fri, 9am–6pm GMT', color: '#10B981', bg: 'rgba(16,185,129,0.08)' },
             { icon: MapPin, title: 'Visit Us', value: 'Cape Coast, Ghana 🇬🇭', desc: 'By appointment only', color: '#F59E0B', bg: 'rgba(245,158,11,0.08)' },
           ].map((item, i) => (

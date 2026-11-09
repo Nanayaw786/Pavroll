@@ -226,7 +226,7 @@ export default function AboutPage() {
             </p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
               {[
-                { icon: Mail, label: 'Email', value: 'hello.pavroll@proton.me' },
+                { icon: Mail, label: 'Email', value: 'hello@pavroll.com' },
                 { icon: Phone, label: 'Phone', value: '+233 53 929 9311' },
                 { icon: MapPin, label: 'Location', value: 'Accra, Ghana 🇬🇭' },
               ].map(item => (
