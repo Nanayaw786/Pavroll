@@ -452,6 +452,31 @@ export default function SuperAdminPage() {
     setTimeout(() => setResult(null), 3000)
   }
 
+  const deleteCompany = async (company: Company) => {
+    const expected = company.name?.trim() || 'DELETE'
+    const typed = window.prompt(`This permanently deletes "${company.name}" and ALL its employees, payroll and records.\n\nType ${expected} to confirm:`)
+    if (typed === null) return
+    if (typed.trim().toLowerCase() !== expected.toLowerCase()) {
+      setResult({ success: false, message: 'Name did not match. Nothing was deleted.' })
+      setTimeout(() => setResult(null), 4000)
+      return
+    }
+    try {
+      const res = await fetch('/api/admin/companies/delete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ companyId: company.id, confirmName: typed }),
+      })
+      const json = await res.json()
+      if (!res.ok) throw new Error(json.error || 'Delete failed')
+      setCompanies(prev => prev.filter(c => c.id !== company.id))
+      if (selectedCompany?.id === company.id) setSelectedCompany(null)
+      setResult({ success: true, message: `${company.name} deleted` })
+    } catch (err: any) {
+      setResult({ success: false, message: err?.message || 'Delete failed' })
+    }
+    setTimeout(() => setResult(null), 5000)
+  }
   const approveSenderId = async (id: string, status: 'approved' | 'rejected') => {
     await supabase.from('sender_id_requests').update({ status }).eq('id', id)
     setSenderIds(prev => prev.map(s => s.id === id ? { ...s, status } : s))
@@ -985,6 +1010,10 @@ export default function SuperAdminPage() {
                           <button onClick={() => { setSelectedCompany(company); setTab('features') }}
                             style={{ padding: '6px 14px', borderRadius: '8px', background: 'rgba(99,102,241,0.1)', border: '1px solid rgba(99,102,241,0.2)', color: '#818CF8', fontSize: '12px', cursor: 'pointer', fontWeight: 600 }}>
                             Manage Features →
+                          </button>
+                          <button onClick={() => deleteCompany(company)}
+                            style={{ padding: '6px 14px', borderRadius: '8px', background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.25)', color: '#EF4444', fontSize: '12px', cursor: 'pointer', fontWeight: 600 }}>
+                            Delete
                           </button>
                         </div>
                       </div>
