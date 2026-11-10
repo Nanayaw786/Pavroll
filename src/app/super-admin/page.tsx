@@ -71,6 +71,7 @@ const NAV_ITEMS = [
   { key: 'calculator', label: 'Calculator', icon: Calculator },
   { key: 'announcements', label: 'Announcements', icon: Megaphone },
   { key: 'senderids', label: 'Sender IDs', icon: MessageSquare },
+  { key: 'usage', label: 'Usage', icon: Activity },
   { key: 'payments', label: 'Payments', icon: CreditCard },
   { key: 'revenue', label: 'Revenue', icon: DollarSign },
   { key: 'system', label: 'System', icon: Server },
@@ -376,8 +377,11 @@ export default function SuperAdminPage() {
   const [savingPartner, setSavingPartner] = useState(false)
   const [payments, setPayments] = useState<any[]>([])
   const [loadingPayments, setLoadingPayments] = useState(false)
+  const [usage, setUsage] = useState<Record<string, any>>({})
+  const [usageFilter, setUsageFilter] = useState('all')
+  const [loadingUsage, setLoadingUsage] = useState(false)
 
-  useEffect(() => { if (!allowed) return; loadData(); loadAnalytics(); loadReferrals(); loadPayments() }, [allowed])
+  useEffect(() => { if (!allowed) return; loadData(); loadAnalytics(); loadReferrals(); loadPayments(); loadUsage() }, [allowed])
 
   const loadReferrals = async () => {
     try {
@@ -398,6 +402,16 @@ export default function SuperAdminPage() {
       if (res.ok) setPayments(json.payments || [])
     } catch (err) { console.error(err) }
     finally { setLoadingPayments(false) }
+  }
+
+  const loadUsage = async () => {
+    setLoadingUsage(true)
+    try {
+      const res = await fetch('/api/admin/usage', { cache: 'no-store' })
+      const json = await res.json()
+      if (res.ok) setUsage(json.usage || {})
+    } catch (err) { console.error(err) }
+    finally { setLoadingUsage(false) }
   }
 
   const loadAnalytics = async () => {
@@ -1234,6 +1248,88 @@ export default function SuperAdminPage() {
                 </div>
               </div>
             )}
+
+            {/* USAGE */}
+            {tab === 'usage' && (() => {
+              const DAY = 86400000
+              const now = Date.now()
+              const STATUS: Record<string, { label: string, color: string }> = {
+                active: { label: 'Active', color: '#10B981' },
+                setup: { label: 'Set up, no payroll yet', color: '#F59E0B' },
+                never: { label: 'Signed up, idle', color: '#EF4444' },
+                quiet: { label: 'Gone quiet', color: '#94A3B8' },
+              }
+              const ago = (t: number) => {
+                if (!t) return 'never'
+                const d = Math.floor((now - t) / DAY)
+                return d <= 0 ? 'today' : d === 1 ? 'yesterday' : `${d} days ago`
+              }
+              const rows = companies.map(c => {
+                const u = usage[c.id] || { employees: 0, payroll_runs: 0, leave_requests: 0, last_activity_at: null }
+                const last = u.last_activity_at ? new Date(u.last_activity_at).getTime() : 0
+                let status = 'quiet'
+                if (u.employees === 0 && u.payroll_runs === 0) status = 'never'
+                else if (u.payroll_runs === 0) status = 'setup'
+                else if (last && now - last < 30 * DAY) status = 'active'
+                return { c, u, last, status }
+              }).sort((a, b) => b.last - a.last)
+              const shown = usageFilter === 'all' ? rows : rows.filter(r => r.status === usageFilter)
+              return (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                  <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                    {[{ key: 'all', label: 'All', color: '#6366F1' }, ...Object.entries(STATUS).map(([key, s]) => ({ key, label: s.label, color: s.color }))].map(f => {
+                      const n = f.key === 'all' ? rows.length : rows.filter(r => r.status === f.key).length
+                      return (
+                        <button key={f.key} onClick={() => setUsageFilter(f.key)}
+                          style={{ padding: '7px 14px', borderRadius: '10px', fontSize: '12px', fontWeight: 600, cursor: 'pointer',
+                            background: usageFilter === f.key ? `${f.color}25` : 'rgba(255,255,255,0.03)',
+                            border: `1px solid ${usageFilter === f.key ? f.color : 'rgba(255,255,255,0.08)'}`,
+                            color: usageFilter === f.key ? f.color : '#94A3B8' }}>
+                          {f.label} ({n})
+                        </button>
+                      )
+                    })}
+                    <button onClick={loadUsage}
+                      style={{ marginLeft: 'auto', padding: '7px 14px', borderRadius: '10px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: '#94A3B8', fontSize: '12px', cursor: 'pointer' }}>
+                      Refresh
+                    </button>
+                  </div>
+                  <p style={{ fontSize: '12px', color: '#475569' }}>
+                    Measured from what each company has done in Pavroll: employees added, payroll runs, leave requests and audit entries.
+                  </p>
+                  <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '16px', overflow: 'hidden' }}>
+                    {loadingUsage && Object.keys(usage).length === 0 && (
+                      <div style={{ padding: '32px', textAlign: 'center' }}>
+                        <Loader2 size={20} color="#EF4444" style={{ animation: 'spin 1s linear infinite', margin: '0 auto' }} />
+                      </div>
+                    )}
+                    {shown.length === 0 && !loadingUsage && (
+                      <div style={{ padding: '40px', textAlign: 'center' }}>
+                        <p style={{ color: '#475569', fontSize: '14px' }}>No companies in this group</p>
+                      </div>
+                    )}
+                    {shown.map(({ c, u, last, status }) => {
+                      const s = STATUS[status]
+                      return (
+                        <div key={c.id} style={{ padding: '14px 20px', borderBottom: '1px solid rgba(255,255,255,0.04)', display: 'flex', alignItems: 'center', gap: '14px', flexWrap: 'wrap' }}>
+                          <div style={{ flex: 1, minWidth: '170px' }}>
+                            <p style={{ fontSize: '13px', fontWeight: 600, color: '#F8FAFC' }}>{c.name}</p>
+                            <p style={{ fontSize: '11px', color: '#475569' }}>{c.email || 'no email'} - joined {new Date(c.created_at).toLocaleDateString()}</p>
+                          </div>
+                          <span style={{ fontSize: '11px', fontWeight: 700, padding: '3px 10px', borderRadius: '999px', background: `${s.color}18`, color: s.color }}>{s.label}</span>
+                          <div style={{ display: 'flex', gap: '16px', fontSize: '12px', color: '#94A3B8' }}>
+                            <span><strong style={{ color: '#F8FAFC' }}>{u.employees}</strong> employees</span>
+                            <span><strong style={{ color: '#F8FAFC' }}>{u.payroll_runs}</strong> payroll runs</span>
+                            <span><strong style={{ color: '#F8FAFC' }}>{u.leave_requests}</strong> leave</span>
+                          </div>
+                          <span style={{ fontSize: '11px', color: '#64748B', minWidth: '110px', textAlign: 'right' }}>Last activity: {ago(last)}</span>
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
+              )
+            })()}
 
             {/* PAYMENTS */}
             {tab === 'payments' && (
