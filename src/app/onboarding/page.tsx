@@ -162,30 +162,11 @@ export default function OnboardingPage() {
       // Referral code
       if (form.referral_code.trim()) {
         try {
-          const { data: partner } = await supabase
-            .from('referral_partners')
-            .select('id, total_referrals')
-            .eq('code', form.referral_code.toUpperCase())
-            .eq('is_active', true)
-            .maybeSingle()
-
-          if (partner) {
-            await supabase.from('companies').update({
-              referral_code: form.referral_code.toUpperCase(),
-              partner_id: partner.id,
-            }).eq('id', companyId)
-
-            await supabase.from('referrals').insert({
-              partner_id: partner.id,
-              company_id: companyId,
-              company_name: form.name,
-              plan: 'trial', monthly_fee: 0, commission: 0, status: 'trial',
-            })
-
-            await supabase.from('referral_partners').update({
-              total_referrals: (partner.total_referrals || 0) + 1,
-            }).eq('id', partner.id)
-          }
+          await fetch('/api/referral/apply', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ code: form.referral_code }),
+          })
         } catch (e) { console.error('Referral error:', e) }
       }
 

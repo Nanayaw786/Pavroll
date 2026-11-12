@@ -79,39 +79,13 @@ export async function getReferrals(partnerId?: string): Promise<Referral[]> {
 // Apply referral code when company signs up
 export async function applyReferralCode(companyId: string, code: string): Promise<boolean> {
   try {
-    const partner = await getPartnerByCode(code)
-    if (!partner) return false
-
-    // Update company with referral info
-    await supabase.from('companies').update({
-      referral_code: code.toUpperCase(),
-      partner_id: partner.id,
-    }).eq('id', companyId)
-
-    // Get company name
-    const { data: company } = await supabase
-      .from('companies')
-      .select('name, plan')
-      .eq('id', companyId)
-      .single()
-
-    // Create referral record
-    await supabase.from('referrals').insert({
-      partner_id: partner.id,
-      company_id: companyId,
-      company_name: company?.name || 'Unknown',
-      plan: company?.plan || 'trial',
-      monthly_fee: PLAN_PRICES[company?.plan || 'trial'],
-      commission: PLAN_PRICES[company?.plan || 'trial'] * (partner.commission_rate / 100),
-      status: company?.plan === 'trial' ? 'trial' : 'active',
+    const res = await fetch('/api/referral/apply', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ code }),
     })
-
-    // Update partner total referrals
-    await supabase.from('referral_partners').update({
-      total_referrals: partner.total_referrals + 1,
-    }).eq('id', partner.id)
-
-    return true
+    const json = await res.json().catch(() => ({}))
+    return res.ok && json.success === true
   } catch {
     return false
   }
