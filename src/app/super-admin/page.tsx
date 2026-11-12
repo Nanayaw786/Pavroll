@@ -17,6 +17,7 @@ import { calculatePayroll, DEFAULT_SETTINGS } from '@/lib/payroll'
 import { getAnalyticsSummary } from '@/lib/analytics'
 import { getReferralPartners, getReferrals, createReferralPartner, updateReferralPartner, deleteReferralPartner, generateReferralCode, type ReferralPartner, type Referral } from '@/lib/referrals'
 import { isSuperAdmin } from '@/lib/admin'
+import { adminData } from '@/lib/adminApi'
 
 type Company = {
   id: string
@@ -426,9 +427,9 @@ export default function SuperAdminPage() {
   const loadData = async () => {
     try {
       setLoading(true)
-      const { data: companiesData } = await supabase.from('companies').select('*').order('created_at', { ascending: false })
+      const companiesData = (await adminData('companies:list')).companies
       if (companiesData) setCompanies(companiesData as Company[])
-      const { data: senderData } = await supabase.from('sender_id_requests').select('*').order('created_at', { ascending: false })
+      const senderData = (await adminData('senderids:list')).requests
       if (senderData) setSenderIds(senderData)
     } catch (err) { console.error(err) }
     finally { setLoading(false) }
@@ -440,7 +441,7 @@ export default function SuperAdminPage() {
       const company = companies.find(c => c.id === companyId)
       if (!company) return
       const updatedFeatures = { ...company.features, [feature]: !current }
-      await supabase.from('companies').update({ features: updatedFeatures }).eq('id', companyId)
+      await adminData('companies:feature', { companyId, feature, value: !current })
       setCompanies(prev => prev.map(c => c.id === companyId ? { ...c, features: updatedFeatures } : c))
       if (selectedCompany?.id === companyId) setSelectedCompany(prev => prev ? { ...prev, features: updatedFeatures } : null)
       setResult({ success: true, message: `${feature} ${!current ? 'enabled' : 'disabled'} for ${company.name}` })
@@ -492,7 +493,7 @@ export default function SuperAdminPage() {
     setTimeout(() => setResult(null), 5000)
   }
   const approveSenderId = async (id: string, status: 'approved' | 'rejected') => {
-    await supabase.from('sender_id_requests').update({ status }).eq('id', id)
+    await adminData('senderids:status', { id, status })
     setSenderIds(prev => prev.map(s => s.id === id ? { ...s, status } : s))
     setResult({ success: true, message: `Sender ID ${status}!` })
     setTimeout(() => setResult(null), 3000)

@@ -1,4 +1,5 @@
 import { supabase } from './supabase'
+import { adminData } from './adminApi'
 
 export type SenderIdRequest = {
   id: string
@@ -13,12 +14,15 @@ export type SenderIdRequest = {
 }
 
 export async function getSenderIdRequests(companyId?: string): Promise<SenderIdRequest[]> {
-  let query = supabase
+  if (!companyId) {
+    const { requests } = await adminData('senderids:list')
+    return requests as SenderIdRequest[]
+  }
+  const { data, error } = await supabase
     .from('sender_id_requests')
     .select('*')
+    .eq('company_id', companyId)
     .order('created_at', { ascending: false })
-  if (companyId) query = query.eq('company_id', companyId)
-  const { data, error } = await query
   if (error) throw error
   return data as SenderIdRequest[]
 }
@@ -34,11 +38,7 @@ export async function createSenderIdRequest(request: Omit<SenderIdRequest, 'id' 
 }
 
 export async function updateSenderIdStatus(id: string, status: 'approved' | 'rejected', adminNote?: string): Promise<void> {
-  const { error } = await supabase
-    .from('sender_id_requests')
-    .update({ status, admin_note: adminNote, updated_at: new Date().toISOString() })
-    .eq('id', id)
-  if (error) throw error
+  await adminData('senderids:status', { id, status, adminNote: adminNote || '' })
 }
 
 export async function getApprovedSenderId(companyId: string): Promise<string | null> {

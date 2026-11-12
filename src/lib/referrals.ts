@@ -1,4 +1,5 @@
 import { supabase } from './supabase'
+import { adminData } from './adminApi'
 
 export type ReferralPartner = {
   id: string
@@ -38,12 +39,8 @@ const PLAN_PRICES: Record<string, number> = {
 
 // Get all partners
 export async function getReferralPartners(): Promise<ReferralPartner[]> {
-  const { data, error } = await supabase
-    .from('referral_partners')
-    .select('*')
-    .order('created_at', { ascending: false })
-  if (error) throw error
-  return data as ReferralPartner[]
+  const { partners } = await adminData('partners:list')
+  return partners as ReferralPartner[]
 }
 
 // Get single partner by code
@@ -59,43 +56,24 @@ export async function getPartnerByCode(code: string): Promise<ReferralPartner | 
 
 // Create partner
 export async function createReferralPartner(partner: Omit<ReferralPartner, 'id' | 'created_at' | 'total_referrals' | 'total_earnings'>): Promise<ReferralPartner> {
-  const { data, error } = await supabase
-    .from('referral_partners')
-    .insert({ ...partner, code: partner.code.toUpperCase() })
-    .select()
-    .single()
-  if (error) throw error
-  return data as ReferralPartner
+  const { partner: created } = await adminData('partners:create', { partner: { ...partner, code: partner.code.toUpperCase() } })
+  return created as ReferralPartner
 }
 
 // Update partner
 export async function updateReferralPartner(id: string, updates: Partial<ReferralPartner>): Promise<void> {
-  const { error } = await supabase
-    .from('referral_partners')
-    .update(updates)
-    .eq('id', id)
-  if (error) throw error
+  await adminData('partners:update', { id, updates })
 }
 
 // Delete partner
 export async function deleteReferralPartner(id: string): Promise<void> {
-  const { error } = await supabase
-    .from('referral_partners')
-    .delete()
-    .eq('id', id)
-  if (error) throw error
+  await adminData('partners:delete', { id })
 }
 
 // Get all referrals
 export async function getReferrals(partnerId?: string): Promise<Referral[]> {
-  let query = supabase
-    .from('referrals')
-    .select(`*, partner:referral_partners(*)`)
-    .order('created_at', { ascending: false })
-  if (partnerId) query = query.eq('partner_id', partnerId)
-  const { data, error } = await query
-  if (error) throw error
-  return data as Referral[]
+  const { referrals } = await adminData('referrals:list', partnerId ? { partnerId } : {})
+  return referrals as Referral[]
 }
 
 // Apply referral code when company signs up

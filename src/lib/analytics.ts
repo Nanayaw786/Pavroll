@@ -1,4 +1,5 @@
 import { supabase } from './supabase'
+import { adminData } from './adminApi'
 
 export type EventType =
   | 'page_view'
@@ -55,11 +56,8 @@ export async function getAnalytics(companyId?: string) {
 
 export async function getAnalyticsSummary() {
   try {
-    const { data } = await supabase
-      .from('app_analytics')
-      .select('event_type, created_at, company_id, page')
-      .order('created_at', { ascending: false })
-      .limit(5000)
+    const { rows } = await adminData('analytics:rows', { limit: 5000 })
+    const data = rows as any[]
 
     if (!data) return null
 
